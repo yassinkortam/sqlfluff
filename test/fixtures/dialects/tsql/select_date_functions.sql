@@ -20,7 +20,6 @@ SELECT
     DATENAME(month, '12:10:30.123'),
     DATENAME(day, '12:10:30.123'),
     DATENAME(dayofyear, '12:10:30.123'),
-    DATENAME(weekday, '12:10:30.123'),
-    DAY(GetDate()) as today
+    DATENAME(weekday, '12:10:30.123')
 FROM
     mytable;

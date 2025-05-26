@@ -3,13 +3,16 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: b7d7ef20a92e8be5f1d1d78915f1a19312436821e2173a1450e3838d0c73dcf9
+_hash: e929b61b11d4ebbe7dcba4df45f5ee2d5e92b28ec812fd6032b7076f1ec4c3c2
 file:
 - statement:
     update_statement:
       keyword: UPDATE
-      table_reference:
-        naked_identifier: t1
+      from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: t1
       set_clause_list:
         keyword: SET
         set_clause:
@@ -26,8 +29,11 @@ file:
 - statement:
     update_statement:
       keyword: UPDATE
-      table_reference:
-        naked_identifier: t1
+      from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: t1
       set_clause_list:
       - keyword: SET
       - set_clause:
@@ -51,13 +57,16 @@ file:
 - statement_terminator: ;
 - statement:
     update_statement:
-    - keyword: UPDATE
-    - table_reference:
+      keyword: UPDATE
+      table_reference:
         naked_identifier: items
-    - comma: ','
-    - table_reference:
-        naked_identifier: month
-    - set_clause_list:
+      comma: ','
+      from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: month
+      set_clause_list:
         keyword: SET
         set_clause:
         - column_reference:
@@ -70,7 +79,7 @@ file:
           - naked_identifier: month
           - dot: .
           - naked_identifier: price
-    - where_clause:
+      where_clause:
         keyword: WHERE
         expression:
         - column_reference:
@@ -87,8 +96,11 @@ file:
 - statement:
     update_statement:
       keyword: UPDATE
-      table_reference:
-        naked_identifier: t
+      from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: t
       set_clause_list:
         keyword: SET
         set_clause:
@@ -111,8 +123,11 @@ file:
 - statement:
     update_statement:
       keyword: UPDATE
-      table_reference:
-        naked_identifier: items
+      from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: items
       set_clause_list:
         keyword: SET
         set_clause:
@@ -358,8 +373,11 @@ file:
     update_statement:
     - keyword: UPDATE
     - keyword: LOW_PRIORITY
-    - table_reference:
-        naked_identifier: foo
+    - from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: foo
     - set_clause_list:
         keyword: SET
         set_clause:
@@ -374,13 +392,16 @@ file:
 - statement_terminator: ;
 - statement:
     update_statement:
-    - keyword: UPDATE
-    - table_reference:
+      keyword: UPDATE
+      table_reference:
         naked_identifier: a
-    - comma: ','
-    - table_reference:
-        naked_identifier: b
-    - set_clause_list:
+      comma: ','
+      from_expression:
+        from_expression_element:
+          table_expression:
+            table_reference:
+              naked_identifier: b
+      set_clause_list:
         keyword: SET
         set_clause:
         - column_reference:
@@ -393,7 +414,7 @@ file:
           - naked_identifier: b
           - dot: .
           - naked_identifier: name
-    - where_clause:
+      where_clause:
         keyword: WHERE
         expression:
         - column_reference:
@@ -450,10 +471,10 @@ file:
       where_clause:
         keyword: where
         expression:
-          column_reference:
+        - column_reference:
           - naked_identifier: a
           - dot: .
           - naked_identifier: type
-          keyword: is
-          null_literal: 'null'
+        - keyword: is
+        - keyword: 'null'
 - statement_terminator: ;

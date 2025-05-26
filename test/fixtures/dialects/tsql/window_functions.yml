@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: bbb3c4c89f2e59ba5265dee316396e1ec222dd96735873bb59313661160a9936
+_hash: 659e7f529b17efa905e2ea180f637aa54226a87233f9e0f9ea046cbb47afcecf
 file:
   batch:
   - statement:
@@ -12,32 +12,29 @@ file:
           keyword: SELECT
           select_clause_element:
             function:
-              function_name:
+            - function_name:
                 keyword: ROW_NUMBER
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  end_bracket: )
-              over_clause:
-                keyword: OVER
-                bracketed:
-                  start_bracket: (
-                  window_specification:
-                    partitionby_clause:
-                    - keyword: PARTITION
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col1
-                    orderby_clause:
-                    - keyword: ORDER
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col2
-                  end_bracket: )
+            - bracketed:
+                start_bracket: (
+                end_bracket: )
+            - keyword: OVER
+            - bracketed:
+                start_bracket: (
+                partitionby_clause:
+                - keyword: PARTITION
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col1
+                orderby_clause:
+                - keyword: ORDER
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col2
+                end_bracket: )
             alias_expression:
               naked_identifier: rn
         from_clause:
@@ -56,30 +53,27 @@ file:
           keyword: SELECT
           select_clause_element:
             function:
-              function_name:
+            - function_name:
                 keyword: ROW_NUMBER
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  end_bracket: )
-              over_clause:
-                keyword: OVER
-                bracketed:
-                  start_bracket: (
-                  window_specification:
-                    partitionby_clause:
-                    - keyword: PARTITION
-                    - keyword: BY
-                    - expression:
-                        numeric_literal: '1'
-                    orderby_clause:
-                    - keyword: ORDER
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col2
-                  end_bracket: )
+            - bracketed:
+                start_bracket: (
+                end_bracket: )
+            - keyword: OVER
+            - bracketed:
+                start_bracket: (
+                partitionby_clause:
+                - keyword: PARTITION
+                - keyword: BY
+                - expression:
+                    numeric_literal: '1'
+                orderby_clause:
+                - keyword: ORDER
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col2
+                end_bracket: )
             alias_expression:
               naked_identifier: rn
         from_clause:
@@ -98,45 +92,42 @@ file:
           keyword: SELECT
           select_clause_element:
             function:
-              function_name:
+            - function_name:
                 keyword: ROW_NUMBER
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  end_bracket: )
-              over_clause:
-                keyword: OVER
-                bracketed:
-                  start_bracket: (
-                  window_specification:
-                    partitionby_clause:
-                    - keyword: PARTITION
-                    - keyword: BY
-                    - expression:
-                        case_expression:
-                        - keyword: CASE
-                        - when_clause:
-                          - keyword: WHEN
-                          - expression:
-                              column_reference:
-                              - naked_identifier: t
-                              - dot: .
-                              - naked_identifier: col1
-                              comparison_operator:
-                                raw_comparison_operator: '='
-                              quoted_literal: "'value'"
-                          - keyword: THEN
-                          - expression:
-                              numeric_literal: '1'
-                        - keyword: END
-                    orderby_clause:
-                    - keyword: ORDER
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col2
-                  end_bracket: )
+            - bracketed:
+                start_bracket: (
+                end_bracket: )
+            - keyword: OVER
+            - bracketed:
+                start_bracket: (
+                partitionby_clause:
+                - keyword: PARTITION
+                - keyword: BY
+                - expression:
+                    case_expression:
+                    - keyword: CASE
+                    - when_clause:
+                      - keyword: WHEN
+                      - expression:
+                          column_reference:
+                          - naked_identifier: t
+                          - dot: .
+                          - naked_identifier: col1
+                          comparison_operator:
+                            raw_comparison_operator: '='
+                          quoted_literal: "'value'"
+                      - keyword: THEN
+                      - expression:
+                          numeric_literal: '1'
+                    - keyword: END
+                orderby_clause:
+                - keyword: ORDER
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col2
+                end_bracket: )
             alias_expression:
               naked_identifier: rn
         from_clause:
@@ -155,55 +146,52 @@ file:
           keyword: SELECT
           select_clause_element:
             function:
-              function_name:
+            - function_name:
                 keyword: ROW_NUMBER
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  end_bracket: )
-              over_clause:
-                keyword: OVER
-                bracketed:
-                  start_bracket: (
-                  window_specification:
-                    partitionby_clause:
-                    - keyword: PARTITION
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col3
-                    - comma: ','
-                    - expression:
-                        case_expression:
-                        - keyword: CASE
-                        - when_clause:
-                          - keyword: WHEN
-                          - expression:
-                              column_reference:
-                              - naked_identifier: t
-                              - dot: .
-                              - naked_identifier: col1
-                              comparison_operator:
-                                raw_comparison_operator: '='
-                              quoted_literal: "'value'"
-                          - keyword: THEN
-                          - expression:
-                              numeric_literal: '1'
-                        - keyword: END
-                    - comma: ','
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col4
-                    orderby_clause:
-                    - keyword: ORDER
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col2
-                  end_bracket: )
+            - bracketed:
+                start_bracket: (
+                end_bracket: )
+            - keyword: OVER
+            - bracketed:
+                start_bracket: (
+                partitionby_clause:
+                - keyword: PARTITION
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col3
+                - comma: ','
+                - expression:
+                    case_expression:
+                    - keyword: CASE
+                    - when_clause:
+                      - keyword: WHEN
+                      - expression:
+                          column_reference:
+                          - naked_identifier: t
+                          - dot: .
+                          - naked_identifier: col1
+                          comparison_operator:
+                            raw_comparison_operator: '='
+                          quoted_literal: "'value'"
+                      - keyword: THEN
+                      - expression:
+                          numeric_literal: '1'
+                    - keyword: END
+                - comma: ','
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col4
+                orderby_clause:
+                - keyword: ORDER
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col2
+                end_bracket: )
             alias_expression:
               naked_identifier: rn
         from_clause:
@@ -222,98 +210,91 @@ file:
           keyword: SELECT
           select_clause_element:
             function:
-              function_name:
+            - function_name:
                 keyword: ROW_NUMBER
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  end_bracket: )
-              over_clause:
-                keyword: OVER
-                bracketed:
-                  start_bracket: (
-                  window_specification:
-                    partitionby_clause:
-                    - keyword: PARTITION
-                    - keyword: BY
-                    - bracketed:
+            - bracketed:
+                start_bracket: (
+                end_bracket: )
+            - keyword: OVER
+            - bracketed:
+                start_bracket: (
+                partitionby_clause:
+                - keyword: PARTITION
+                - keyword: BY
+                - bracketed:
+                    start_bracket: (
+                    expression:
+                      select_statement:
+                        select_clause:
+                          keyword: SELECT
+                          select_clause_element:
+                            column_reference:
+                              naked_identifier: col1
+                        from_clause:
+                          keyword: FROM
+                          from_expression:
+                            from_expression_element:
+                              table_expression:
+                                table_reference:
+                                  naked_identifier: othertable
+                    end_bracket: )
+                orderby_clause:
+                - keyword: ORDER
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col2
+                end_bracket: )
+            alias_expression:
+              naked_identifier: rn
+        from_clause:
+          keyword: FROM
+          from_expression:
+            from_expression_element:
+              table_expression:
+                table_reference:
+                  naked_identifier: mytable
+              alias_expression:
+                naked_identifier: t
+          statement_terminator: ;
+  - statement:
+      select_statement:
+        select_clause:
+          keyword: SELECT
+          select_clause_element:
+            function:
+            - function_name:
+                keyword: ROW_NUMBER
+            - bracketed:
+                start_bracket: (
+                end_bracket: )
+            - keyword: OVER
+            - bracketed:
+                start_bracket: (
+                partitionby_clause:
+                - keyword: PARTITION
+                - keyword: BY
+                - expression:
+                    function:
+                      function_name:
+                        function_name_identifier: SUM
+                      bracketed:
                         start_bracket: (
                         expression:
-                          select_statement:
-                            select_clause:
-                              keyword: SELECT
-                              select_clause_element:
-                                column_reference:
-                                  naked_identifier: col1
-                            from_clause:
-                              keyword: FROM
-                              from_expression:
-                                from_expression_element:
-                                  table_expression:
-                                    table_reference:
-                                      naked_identifier: othertable
+                          column_reference:
+                          - naked_identifier: t
+                          - dot: .
+                          - naked_identifier: col1
                         end_bracket: )
-                    orderby_clause:
-                    - keyword: ORDER
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col2
-                  end_bracket: )
-            alias_expression:
-              naked_identifier: rn
-        from_clause:
-          keyword: FROM
-          from_expression:
-            from_expression_element:
-              table_expression:
-                table_reference:
-                  naked_identifier: mytable
-              alias_expression:
-                naked_identifier: t
-          statement_terminator: ;
-  - statement:
-      select_statement:
-        select_clause:
-          keyword: SELECT
-          select_clause_element:
-            function:
-              function_name:
-                keyword: ROW_NUMBER
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  end_bracket: )
-              over_clause:
-                keyword: OVER
-                bracketed:
-                  start_bracket: (
-                  window_specification:
-                    partitionby_clause:
-                    - keyword: PARTITION
-                    - keyword: BY
-                    - expression:
-                        function:
-                          function_name:
-                            function_name_identifier: SUM
-                          function_contents:
-                            bracketed:
-                              start_bracket: (
-                              expression:
-                                column_reference:
-                                - naked_identifier: t
-                                - dot: .
-                                - naked_identifier: col1
-                              end_bracket: )
-                    orderby_clause:
-                    - keyword: ORDER
-                    - keyword: BY
-                    - column_reference:
-                      - naked_identifier: t
-                      - dot: .
-                      - naked_identifier: col2
-                  end_bracket: )
+                orderby_clause:
+                - keyword: ORDER
+                - keyword: BY
+                - column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: col2
+                end_bracket: )
             alias_expression:
               naked_identifier: rn
         from_clause:

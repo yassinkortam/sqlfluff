@@ -1,5 +1,4 @@
 """Module used to test foo within the jinja template."""
-
 schema = "sch1"
 
 

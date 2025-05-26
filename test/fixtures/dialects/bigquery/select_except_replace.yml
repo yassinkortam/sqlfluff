@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 8f677c4c98fd1853db8ffcdefbd1a38f69ccc6bfda06bb795efb62b40fc0ea8d
+_hash: b87b7c4bc323ea48b9c76005402f9fad26742d896f7770880092822cf100ef8e
 file:
   statement:
     select_statement:
@@ -23,10 +23,10 @@ file:
               keyword: replace
               bracketed:
                 start_bracket: (
-                function:
-                  function_name:
-                    function_name_identifier: concat
-                  function_contents:
+                select_clause_element:
+                  function:
+                    function_name:
+                      function_name_identifier: concat
                     bracketed:
                     - start_bracket: (
                     - expression:
@@ -36,8 +36,9 @@ file:
                     - expression:
                         quoted_literal: "'berry'"
                     - end_bracket: )
-                keyword: as
-                naked_identifier: fruit
+                  alias_expression:
+                    keyword: as
+                    naked_identifier: fruit
                 end_bracket: )
       from_clause:
         keyword: from

@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 3d65668c4738f96a0ac7dbcf556d5b2370c89aff6094acfbf485aa44b1d9fc22
+_hash: fd300f1b1bc9dccbe8ecd3468cbdbbdca0735b35f2d8d32cd5cde71a1ab936dd
 file:
 - statement:
     constraint_statement:
@@ -34,13 +34,13 @@ file:
             naked_identifier: current_page_id
         - keyword: IS
         - keyword: NOT
-        - null_literal: 'NULL'
+        - keyword: 'NULL'
         - binary_operator: AND
         - column_reference:
             naked_identifier: current_page_title
         - keyword: IS
         - keyword: NOT
-        - null_literal: 'NULL'
+        - keyword: 'NULL'
         end_bracket: )
     - keyword: 'ON'
     - keyword: VIOLATION

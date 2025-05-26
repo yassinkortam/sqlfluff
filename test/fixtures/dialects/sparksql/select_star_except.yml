@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: be4429aa76f902654b502847e39a9679f51e7a8dd4a0e622d75ab8486962b5c6
+_hash: cf951c121772e7daad8ad73fa0d9ad5377c234e3d698b732a743316409429048
 file:
 - statement:
     select_statement:
@@ -17,8 +17,7 @@ file:
               keyword: except
               bracketed:
                 start_bracket: (
-                column_reference:
-                  naked_identifier: col
+                naked_identifier: col
                 end_bracket: )
       from_clause:
         keyword: from
@@ -48,8 +47,7 @@ file:
               keyword: except
               bracketed:
                 start_bracket: (
-                column_reference:
-                  naked_identifier: col
+                naked_identifier: col
                 end_bracket: )
       from_clause:
         keyword: from
@@ -79,20 +77,15 @@ file:
               keyword: except
               bracketed:
               - start_bracket: (
-              - column_reference:
-                  naked_identifier: col1
+              - naked_identifier: col1
               - comma: ','
-              - column_reference:
-                  naked_identifier: col2
+              - naked_identifier: col2
               - comma: ','
-              - column_reference:
-                  naked_identifier: col3
+              - naked_identifier: col3
               - comma: ','
-              - column_reference:
-                  naked_identifier: col4
+              - naked_identifier: col4
               - comma: ','
-              - column_reference:
-                  naked_identifier: col5
+              - naked_identifier: col5
               - end_bracket: )
       from_clause:
         keyword: from
@@ -109,31 +102,4 @@ file:
           comparison_operator:
             raw_comparison_operator: '='
           numeric_literal: '1'
-- statement_terminator: ;
-- statement:
-    select_statement:
-      select_clause:
-        keyword: select
-        select_clause_element:
-          wildcard_expression:
-            wildcard_identifier:
-              naked_identifier: a
-              dot: .
-              star: '*'
-            select_except_clause:
-              keyword: except
-              bracketed:
-                start_bracket: (
-                column_reference:
-                - naked_identifier: a
-                - dot: .
-                - naked_identifier: b
-                end_bracket: )
-      from_clause:
-        keyword: from
-        from_expression:
-          from_expression_element:
-            table_expression:
-              table_reference:
-                naked_identifier: a
 - statement_terminator: ;

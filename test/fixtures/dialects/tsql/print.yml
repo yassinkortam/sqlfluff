@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 0b4d19ca1ba6503fc63c2d7023df597e2aa76bd3fff30b9918ca52c6b6d7054b
+_hash: 5da646ea7ac1fc4b9d5602093d75a4521539f0acbe14d93e17ac7b7cccd339ad
 file:
   batch:
   - statement:
@@ -12,12 +12,11 @@ file:
         parameter: '@TestVal'
         data_type:
           data_type_identifier: VARCHAR
-          bracketed_arguments:
-            bracketed:
-              start_bracket: (
-              expression:
-                numeric_literal: '20'
-              end_bracket: )
+          bracketed:
+            start_bracket: (
+            expression:
+              numeric_literal: '20'
+            end_bracket: )
         comparison_operator:
           raw_comparison_operator: '='
         expression:
@@ -34,27 +33,24 @@ file:
           function:
             function_name:
               keyword: CAST
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  function:
-                    function_name:
-                      function_name_identifier: GETDATE
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
-                keyword: AS
-                data_type:
-                  data_type_identifier: VARCHAR
-                  bracketed_arguments:
-                    bracketed:
-                      start_bracket: (
-                      expression:
-                        numeric_literal: '50'
-                      end_bracket: )
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                function:
+                  function_name:
+                    function_name_identifier: GETDATE
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
+              keyword: AS
+              data_type:
+                data_type_identifier: VARCHAR
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    numeric_literal: '50'
+                  end_bracket: )
+              end_bracket: )
         statement_terminator: ;
   - statement:
       print_statement:

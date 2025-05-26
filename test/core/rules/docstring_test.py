@@ -1,19 +1,13 @@
 """Test rules docstring."""
-
-import re
-
 import pytest
 
 from sqlfluff import lint
 from sqlfluff.core.plugin.host import get_plugin_manager
+from sqlfluff.core.rules.doc_decorators import is_configurable, is_documenting_groups
 
-# NOTE: python 3.13 treats docstring whitespace differently to previous
-# versions. Not critical for rendering, but does affect how we test for
-# content here.
-# https://docs.python.org/3.13/whatsnew/3.13.html#other-language-changes
-KEYWORD_ANTI = re.compile(r"\*\*Anti-pattern\*\*")
-KEYWORD_BEST = re.compile(r"\*\*Best practice\*\*")
-KEYWORD_CODE_BLOCK = re.compile(r"\.\. code-block:: (sql|jinja)\n")
+KEYWORD_ANTI = "    **Anti-pattern**"
+KEYWORD_BEST = "    **Best practice**"
+KEYWORD_CODE_BLOCK = "\n    .. code-block:: sql\n"
 
 
 @pytest.mark.parametrize(
@@ -29,7 +23,7 @@ def test_content_count(content, min_count):
     for plugin_rules in get_plugin_manager().hook.get_rules():
         for rule in plugin_rules:
             if rule._check_docstring is True:
-                assert len(content.findall(rule.__doc__)) >= min_count, (
+                assert rule.__doc__.count(content) >= min_count, (
                     f"{rule.__name__} content {content} does not occur at least "
                     f"{min_count} times"
                 )
@@ -40,16 +34,33 @@ def test_keyword_anti_before_best():
     for plugin_rules in get_plugin_manager().hook.get_rules():
         for rule in plugin_rules:
             if rule._check_docstring is True:
-                best_match = KEYWORD_BEST.search(rule.__doc__)
-                anti_match = KEYWORD_ANTI.search(rule.__doc__)
-                assert best_match
-                assert anti_match
-                best_pos = best_match.start()
-                anti_pos = anti_match.start()
-                assert anti_pos < best_pos, (
+                assert rule.__doc__.index(KEYWORD_ANTI) < rule.__doc__.index(
+                    KEYWORD_BEST
+                ), (
                     f"{rule.__name__} keyword {KEYWORD_BEST} appears before "
                     f"{KEYWORD_ANTI}"
                 )
+
+
+def test_config_decorator():
+    """Test rules with config_keywords have the @document_configuration decorator."""
+    for plugin_rules in get_plugin_manager().hook.get_rules():
+        for rule in plugin_rules:
+            if hasattr(rule, "config_keywords"):
+                assert is_configurable(rule), (
+                    f"Rule {rule.__name__} has config but is not decorated with "
+                    "@document_configuration to display that config."
+                )
+
+
+def test_groups_decorator():
+    """Test rules with groups have the @document_groups decorator."""
+    for plugin_rules in get_plugin_manager().hook.get_rules():
+        for rule in plugin_rules:
+            if hasattr(rule, "groups"):
+                assert is_documenting_groups(
+                    rule
+                ), f'Rule {rule.__name__} does not specify "@document_groups".'
 
 
 def test_backtick_replace():
@@ -60,8 +71,8 @@ def test_backtick_replace():
         b
     FROM foo
     """
-    result = lint(sql, rules=["ST08"])
-    # ST08 docstring looks like:
+    result = lint(sql, rules=["L015"])
+    # L015 docstring looks like:
     # ``DISTINCT`` used with parentheses.
     # Check the double bacticks (``) get replaced by a single quote (').
     assert result[0]["description"] == "'DISTINCT' used with parentheses."

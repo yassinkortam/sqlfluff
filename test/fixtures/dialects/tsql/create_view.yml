@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 1898315ec485bb535b9dc814687014fafefa6202aa12dacf92ae2e60fbb3f6aa
+_hash: a1c91938da11ffd5936f7cae72bc57c3e7cd19437f6a0335210c8ab2b9dd3d72
 file:
   batch:
   - statement:
@@ -35,13 +35,12 @@ file:
               function:
                 function_name:
                   function_name_identifier: SUM
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      column_reference:
-                        naked_identifier: TotalDue
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    column_reference:
+                      naked_identifier: TotalDue
+                  end_bracket: )
               alias_expression:
                 keyword: AS
                 naked_identifier: TotalSales
@@ -64,17 +63,16 @@ file:
               function:
                 function_name:
                   keyword: CONVERT
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - data_type:
-                      data_type_identifier: DATETIME
-                  - comma: ','
-                  - expression:
-                      quoted_literal: "'20001231'"
-                  - comma: ','
-                  - numeric_literal: '101'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - data_type:
+                    data_type_identifier: DATETIME
+                - comma: ','
+                - expression:
+                    quoted_literal: "'20001231'"
+                - comma: ','
+                - numeric_literal: '101'
+                - end_bracket: )
           groupby_clause:
           - keyword: GROUP
           - keyword: BY
@@ -110,13 +108,12 @@ file:
               function:
                 function_name:
                   function_name_identifier: SUM
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      column_reference:
-                        naked_identifier: TotalDue
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    column_reference:
+                      naked_identifier: TotalDue
+                  end_bracket: )
               alias_expression:
                 keyword: AS
                 naked_identifier: TotalSales
@@ -139,17 +136,16 @@ file:
               function:
                 function_name:
                   keyword: CONVERT
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - data_type:
-                      data_type_identifier: DATETIME
-                  - comma: ','
-                  - expression:
-                      quoted_literal: "'20001231'"
-                  - comma: ','
-                  - numeric_literal: '101'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - data_type:
+                    data_type_identifier: DATETIME
+                - comma: ','
+                - expression:
+                    quoted_literal: "'20001231'"
+                - comma: ','
+                - numeric_literal: '101'
+                - end_bracket: )
           groupby_clause:
           - keyword: GROUP
           - keyword: BY
@@ -224,17 +220,16 @@ file:
             - function:
                 function_name:
                   keyword: CONVERT
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - data_type:
-                      data_type_identifier: DATETIME
-                  - comma: ','
-                  - expression:
-                      quoted_literal: "'20010630'"
-                  - comma: ','
-                  - numeric_literal: '101'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - data_type:
+                    data_type_identifier: DATETIME
+                - comma: ','
+                - expression:
+                    quoted_literal: "'20010630'"
+                - comma: ','
+                - numeric_literal: '101'
+                - end_bracket: )
           statement_terminator: ;
   - statement:
       create_view_statement:

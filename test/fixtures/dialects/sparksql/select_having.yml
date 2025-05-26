@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 3b7ead0404a652c0e64be98bd836c640cbceb0be3feac58aeac9a6da859ec64d
+_hash: c126a9037518daed2db82455d9d3b1fdbdc72ce0ce521835403f730cf1540866
 file:
 - statement:
     select_statement:
@@ -17,13 +17,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: sum_quantity
@@ -60,13 +59,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: sum_quantity
@@ -88,13 +86,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           comparison_operator:
             raw_comparison_operator: '>'
           numeric_literal: '15'
@@ -111,13 +108,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: sum_quantity
@@ -154,13 +150,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: sum_quantity
@@ -182,13 +177,12 @@ file:
           function:
             function_name:
               function_name_identifier: max
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           comparison_operator:
             raw_comparison_operator: '>'
           numeric_literal: '15'
@@ -205,13 +199,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: sum_quantity
@@ -248,13 +241,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: sum_quantity
@@ -271,13 +263,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: quantity
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: quantity
+              end_bracket: )
           comparison_operator:
             raw_comparison_operator: '>'
           numeric_literal: '10'

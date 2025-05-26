@@ -13,7 +13,6 @@ build
 _build
 dist
 .pytest_cache
-/sqlfluff-*
 
 # Ignore the Environment
 env
@@ -21,7 +20,6 @@ env
 venv
 .venv
 .python-version
-uv.lock
 
 # Ignore coverage reports
 .coverage
@@ -36,7 +34,6 @@ test-reports
 # Ignore root testing sql & python files
 /test*.sql
 /test*.py
-/test*.txt
 /.hypothesis/
 
 # Ignore dbt outputs from testing
@@ -52,14 +49,3 @@ environment.yml
 *.prof
 # Ignore temp packages.yml generated during testing.
 plugins/sqlfluff-templater-dbt/test/fixtures/dbt/dbt_project/packages.yml
-
-# VSCode
-.vscode
-*.code-workspace
-
-# Emacs
-*~
-
-# Mypyc outputs
-*.pyd
-*.so

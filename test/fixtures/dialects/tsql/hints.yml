@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 52d055954643455ca88ccce9fdbfa58a9a89f75a052b4ba39751da4f354dbd8f
+_hash: e43dd4231a12a1515781ca109632f9fdbb660030b474b3b475f0f99735425dd0
 file:
 - batch:
     statement:
@@ -82,22 +82,20 @@ file:
       - parameter: '@city_name'
       - data_type:
           data_type_identifier: NVARCHAR
-          bracketed_arguments:
-            bracketed:
-              start_bracket: (
-              expression:
-                numeric_literal: '30'
-              end_bracket: )
+          bracketed:
+            start_bracket: (
+            expression:
+              numeric_literal: '30'
+            end_bracket: )
       - comma: ','
       - parameter: '@postal_code'
       - data_type:
           data_type_identifier: NVARCHAR
-          bracketed_arguments:
-            bracketed:
-              start_bracket: (
-              expression:
-                numeric_literal: '15'
-              end_bracket: )
+          bracketed:
+            start_bracket: (
+            expression:
+              numeric_literal: '15'
+            end_bracket: )
     - keyword: AS
     - procedure_statement:
         statement:
@@ -202,7 +200,7 @@ file:
                       naked_identifier: PersonID
                   - keyword: IS
                   - keyword: NOT
-                  - null_literal: 'NULL'
+                  - keyword: 'NULL'
             - set_operator:
               - keyword: UNION
               - keyword: ALL
@@ -361,13 +359,12 @@ file:
             function:
               function_name:
                 function_name_identifier: SUM
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    column_reference:
-                      naked_identifier: LineTotal
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    naked_identifier: LineTotal
+                end_bracket: )
             alias_expression:
               keyword: AS
               naked_identifier: Total
@@ -436,13 +433,12 @@ file:
             function:
               function_name:
                 function_name_identifier: SUM
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    column_reference:
-                      naked_identifier: LineTotal
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    naked_identifier: LineTotal
+                end_bracket: )
             alias_expression:
               keyword: AS
               naked_identifier: Total
@@ -979,37 +975,12 @@ file:
                 - naked_identifier: dbo
                 - dot: .
                 - naked_identifier: tableX
-                post_table_expression:
-                  keyword: WITH
-                  bracketed:
-                    start_bracket: (
-                    query_hint_segment:
-                      keyword: NOLOCK
-                    end_bracket: )
-- go_statement:
-    keyword: GO
-- batch:
-    statement:
-      select_statement:
-        select_clause:
-          keyword: SELECT
-          select_clause_element:
-            column_reference:
-              naked_identifier: ID
-        from_clause:
-          keyword: FROM
-          from_expression:
-            from_expression_element:
-              table_expression:
-                table_reference:
-                - naked_identifier: dbo
-                - dot: .
-                - naked_identifier: tableX
-                post_table_expression:
-                  bracketed:
-                    start_bracket: (
-                    query_hint_segment:
-                      keyword: NOLOCK
-                    end_bracket: )
+              post_table_expression:
+                keyword: WITH
+                bracketed:
+                  start_bracket: (
+                  query_hint_segment:
+                    keyword: NOLOCK
+                  end_bracket: )
 - go_statement:
     keyword: GO

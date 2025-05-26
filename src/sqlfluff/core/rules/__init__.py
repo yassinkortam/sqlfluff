@@ -1,26 +1,25 @@
 """Configuration and examples for individual rules."""
 
-from sqlfluff.core.plugin.host import get_plugin_manager
 from sqlfluff.core.rules.base import (
-    BaseRule,
-    EvalResultType,
-    LintResult,
-    RuleGhost,
-    RulePack,
     RuleSet,
+    BaseRule,
+    LintResult,
+    LintFix,
+    RuleGhost,
+    EvalResultType,
 )
-from sqlfluff.core.rules.config_info import ConfigInfo, get_config_info
 from sqlfluff.core.rules.context import RuleContext
-from sqlfluff.core.rules.fix import LintFix
+from sqlfluff.core.rules.config_info import STANDARD_CONFIG_INFO_DICT
+from sqlfluff.core.plugin.host import get_plugin_manager
 
 
-def _load_standard_rules() -> RuleSet:
+def _load_standard_rules():
     """Initialise the standard ruleset.
 
     We do this on each call so that dynamic rules changes
     are possible.
     """
-    std_rule_set = RuleSet(name="standard", config_info=get_config_info())
+    std_rule_set = RuleSet(name="standard", config_info=STANDARD_CONFIG_INFO_DICT)
 
     # Iterate through the rules list and register each rule with the standard set.
     for plugin_rules in get_plugin_manager().hook.get_rules():
@@ -41,12 +40,10 @@ def get_ruleset(name: str = "standard") -> RuleSet:
 __all__ = (
     "get_ruleset",
     "RuleSet",
-    "RulePack",
     "BaseRule",
     "LintResult",
     "LintFix",
     "RuleContext",
     "RuleGhost",
     "EvalResultType",
-    "ConfigInfo",
 )

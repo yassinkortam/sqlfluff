@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 0073c013e8762f326f646d2dd0633b1fc2f287f1a7ccd4e5ba80c24ff67d544c
+_hash: 8381964744a2723edcf42ca3a6389fac06143cf17b41ef1794ff592b1213f03e
 file:
 - statement:
     create_table_statement:
@@ -18,8 +18,7 @@ file:
     - bracketed:
         start_bracket: (
         column_definition:
-          column_reference:
-            naked_identifier: col_name1
+          naked_identifier: col_name1
           data_type:
             primitive_type:
               keyword: STRING
@@ -125,22 +124,19 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: age
+          naked_identifier: age
           data_type:
             primitive_type:
               keyword: INT
@@ -183,22 +179,19 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: age
+          naked_identifier: age
           data_type:
             primitive_type:
               keyword: INT
@@ -227,22 +220,19 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: age
+          naked_identifier: age
           data_type:
             primitive_type:
               keyword: INT
@@ -271,15 +261,13 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
@@ -307,15 +295,13 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
@@ -343,15 +329,13 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
@@ -378,59 +362,51 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: student_name
+          naked_identifier: student_name
           data_type:
             primitive_type:
               keyword: STRING
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: friends
+          naked_identifier: friends
           data_type:
-            array_type:
-              keyword: ARRAY
-              start_angle_bracket: <
-              data_type:
-                primitive_type:
-                  keyword: STRING
-              end_angle_bracket: '>'
+            keyword: ARRAY
+            start_angle_bracket: <
+            data_type:
+              primitive_type:
+                keyword: STRING
+            end_angle_bracket: '>'
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: children
+          naked_identifier: children
           data_type:
-          - keyword: MAP
+            keyword: MAP
+            start_angle_bracket: <
+            primitive_type:
+              keyword: STRING
+            comma: ','
+            data_type:
+              primitive_type:
+                keyword: INT
+            end_angle_bracket: '>'
+      - comma: ','
+      - column_definition:
+          naked_identifier: address
+          data_type:
+          - keyword: STRUCT
           - start_angle_bracket: <
+          - naked_identifier: street
+          - colon: ':'
           - data_type:
               primitive_type:
                 keyword: STRING
           - comma: ','
+          - naked_identifier: city
+          - colon: ':'
           - data_type:
               primitive_type:
-                keyword: INT
+                keyword: STRING
           - end_angle_bracket: '>'
-      - comma: ','
-      - column_definition:
-          column_reference:
-            naked_identifier: address
-          data_type:
-            struct_type:
-              keyword: STRUCT
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: street
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: STRING
-              - comma: ','
-              - naked_identifier: city
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: STRING
-              - end_angle_bracket: '>'
       - end_bracket: )
     - row_format_clause:
       - keyword: ROW
@@ -513,15 +489,13 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: family_name
+          naked_identifier: family_name
           data_type:
             primitive_type:
               keyword: STRING
@@ -549,15 +523,13 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: age
+          naked_identifier: age
           data_type:
             primitive_type:
               keyword: STRING
@@ -585,15 +557,13 @@ file:
     - bracketed:
       - start_bracket: (
       - column_definition:
-          column_reference:
-            naked_identifier: id
+          naked_identifier: id
           data_type:
             primitive_type:
               keyword: INT
       - comma: ','
       - column_definition:
-          column_reference:
-            naked_identifier: test_name
+          naked_identifier: test_name
           data_type:
             primitive_type:
               keyword: STRING

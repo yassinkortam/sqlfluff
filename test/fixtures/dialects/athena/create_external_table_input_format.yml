@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: c0112e4b1374744bea18f7bc4cee2caf76d052a8e188a6b5a88d1f668a728e47
+_hash: 89736602cebb4b7df453b1a6b750b53e568799a82aed2c0777c13457e5539dbf
 file:
   statement:
     create_table_statement:
@@ -66,7 +66,7 @@ file:
     - keyword: OUTPUTFORMAT
     - quoted_literal: "'some output format'"
     - keyword: LOCATION
-    - quoted_literal: "'s3://athena-examples-myregion/some_data/'"
+    - raw: "'s3://athena-examples-myregion/some_data/'"
     - keyword: TBLPROPERTIES
     - bracketed:
       - start_bracket: (

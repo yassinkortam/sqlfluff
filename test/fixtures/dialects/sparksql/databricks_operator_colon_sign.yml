@@ -3,19 +3,17 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 2b542b9c315c416aad52beb12d7bff7ce7e4a65dea1c8fa65266477ccc1f05da
+_hash: 55cdb3f3a236b72c83d31e4f9dc44c8edd428bd66484847b6fde17cfd6b809cb
 file:
 - statement:
     select_statement:
       select_clause:
         keyword: SELECT
         select_clause_element:
-          expression:
-            column_reference:
-              naked_identifier: c1
-            semi_structured_expression:
-              colon: ':'
-              semi_structured_element: price
+          column_reference:
+          - naked_identifier: c1
+          - colon: ':'
+          - naked_identifier: price
       from_clause:
         keyword: FROM
         from_expression:
@@ -43,25 +41,25 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: c1
+              colon: ':'
+            array_accessor:
+              start_square_bracket: '['
+              expression:
+                quoted_literal: "'price'"
+              end_square_bracket: ']'
             cast_expression:
-              column_reference:
-                naked_identifier: c1
-              semi_structured_expression:
-                colon: ':'
-                start_square_bracket: '['
-                semi_structured_element: "'price'"
-                end_square_bracket: ']'
               casting_operator: '::'
               data_type:
                 primitive_type:
                   keyword: DECIMAL
-                  bracketed_arguments:
-                    bracketed:
-                    - start_bracket: (
-                    - numeric_literal: '5'
-                    - comma: ','
-                    - numeric_literal: '2'
-                    - end_bracket: )
+                  bracketed:
+                  - start_bracket: (
+                  - numeric_literal: '5'
+                  - comma: ','
+                  - numeric_literal: '2'
+                  - end_bracket: )
       from_clause:
         keyword: FROM
         from_expression:

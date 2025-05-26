@@ -4,18 +4,17 @@ Any files in the test/fixtures/linter/autofix directory will be picked up
 and automatically tested against the appropriate dialect.
 """
 
+from typing import Optional
+import pytest
+import os
+import tempfile
+import shutil
 import json
 import logging
-import os
-import shutil
-import tempfile
-from typing import Optional
-
-import pytest
 import yaml
 
 from sqlfluff.core import FluffConfig, Linter
-from sqlfluff.core.config import clear_config_caches
+
 
 # Construct the tests from the filepath
 test_cases = []
@@ -99,7 +98,7 @@ def auto_fix_test(dialect, folder, caplog):
                 for line in source_file:
                     dest_file.write(line)
     except FileNotFoundError:
-        # No config file? No big deal
+        # No config file? No biggie
         print("## No Config File Found.")
         pass
     print(f"## Input file:\n{print_buff}")
@@ -115,17 +114,10 @@ def auto_fix_test(dialect, folder, caplog):
     overrides = {"dialect": dialect}
     if rules:
         overrides["rules"] = rules
-
-    # Clear config caches before loading. The way we move files around
-    # makes the filepath based caching inaccurate, which leads to unstable
-    # test cases unless we regularly clear the cache.
-    clear_config_caches()
     cfg = FluffConfig.from_root(overrides=overrides)
     lnt = Linter(config=cfg)
     res = lnt.lint_path(filepath, fix=True)
 
-    if not res.files:
-        raise ValueError("LintedDir empty: Parsing likely failed.")
     print(f"## Templated file:\n{res.tree.raw}")
 
     # We call the check_tuples here, even to makes sure any non-linting
@@ -149,10 +141,8 @@ def auto_fix_test(dialect, folder, caplog):
     # Read the fixed file
     with open(filepath) as fixed_file:
         fixed_buff = fixed_file.read()
-    # Clear up once read
+    # Clearup once read
     shutil.rmtree(tempdir_path)
-    # Also clear the config cache again so it's not polluted for later tests.
-    clear_config_caches()
     # Read the comparison file
     with open(cmp_filepath) as comp_file:
         comp_buff = comp_file.read()

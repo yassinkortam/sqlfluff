@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: dca7d5478d7b46625258401d664c36b95e94cffc6a4e046d2f72e1dc54ce2b34
+_hash: 6da6849d0cf0e48809d62b8bdfce5180ca01fd95df5005628ca1532711c76fca
 file:
   batch:
   - statement:
@@ -43,8 +43,7 @@ file:
                   - dot: .
                   - naked_identifier: col
                 - keyword: COLLATE
-                - collation_reference:
-                    naked_identifier: Latin1_GENERAL_CS_AS
+                - collation: Latin1_GENERAL_CS_AS
           statement_terminator: ;
   - statement:
       select_statement:
@@ -77,8 +76,7 @@ file:
                   - dot: .
                   - naked_identifier: col
                 - keyword: COLLATE
-                - collation_reference:
-                    naked_identifier: Latin1_GENERAL_CS_AS
+                - collation: Latin1_GENERAL_CS_AS
                 - comparison_operator:
                     raw_comparison_operator: '='
                 - column_reference:
@@ -107,8 +105,7 @@ file:
             column_reference:
               naked_identifier: col
             keyword: COLLATE
-            collation_reference:
-              naked_identifier: Latin1_General_CS_AS_KS_WS
+            collation: Latin1_General_CS_AS_KS_WS
         - keyword: DESC
         statement_terminator: ;
   - statement:
@@ -120,8 +117,7 @@ file:
               column_reference:
                 naked_identifier: col
               keyword: COLLATE
-              collation_reference:
-                naked_identifier: Latin1_General_CS_AS_KS_WS
+              collation: Latin1_General_CS_AS_KS_WS
         from_clause:
           keyword: FROM
           from_expression:
@@ -139,8 +135,7 @@ file:
               column_reference:
                 naked_identifier: col
               keyword: COLLATE
-              collation_reference:
-                naked_identifier: database_default
+              collation: database_default
         from_clause:
           keyword: FROM
           from_expression:
