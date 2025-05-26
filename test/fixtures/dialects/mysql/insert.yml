@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: f26042eddf4339d9869fb9f5ad624003347b83461901ce6ffb122617abf6c2d9
+_hash: 3b8673f39b407cd4047f596f5de3f74b366126055cdcba1a8dc9ed773a309c81
 file:
 - statement:
     insert_statement:
@@ -26,20 +26,26 @@ file:
       - keyword: VALUES
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - comma: ','
-        - numeric_literal: '3'
+        - expression:
+            numeric_literal: '3'
         - end_bracket: )
       - comma: ','
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '4'
+        - expression:
+            numeric_literal: '4'
         - comma: ','
-        - numeric_literal: '5'
+        - expression:
+            numeric_literal: '5'
         - comma: ','
-        - numeric_literal: '6'
+        - expression:
+            numeric_literal: '6'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -112,20 +118,26 @@ file:
       - keyword: VALUES
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - comma: ','
-        - numeric_literal: '3'
+        - expression:
+            numeric_literal: '3'
         - end_bracket: )
       - comma: ','
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '4'
+        - expression:
+            numeric_literal: '4'
         - comma: ','
-        - numeric_literal: '5'
+        - expression:
+            numeric_literal: '5'
         - comma: ','
-        - numeric_literal: '6'
+        - expression:
+            numeric_literal: '6'
         - end_bracket: )
     - insert_row_alias:
         keyword: AS
@@ -172,20 +184,26 @@ file:
       - keyword: VALUES
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - comma: ','
-        - numeric_literal: '3'
+        - expression:
+            numeric_literal: '3'
         - end_bracket: )
       - comma: ','
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '4'
+        - expression:
+            numeric_literal: '4'
         - comma: ','
-        - numeric_literal: '5'
+        - expression:
+            numeric_literal: '5'
         - comma: ','
-        - numeric_literal: '6'
+        - expression:
+            numeric_literal: '6'
         - end_bracket: )
     - insert_row_alias:
         keyword: AS
@@ -244,20 +262,26 @@ file:
       - keyword: VALUES
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - comma: ','
-        - numeric_literal: '3'
+        - expression:
+            numeric_literal: '3'
         - end_bracket: )
       - comma: ','
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '4'
+        - expression:
+            numeric_literal: '4'
         - comma: ','
-        - numeric_literal: '5'
+        - expression:
+            numeric_literal: '5'
         - comma: ','
-        - numeric_literal: '6'
+        - expression:
+            numeric_literal: '6'
         - end_bracket: )
     - insert_row_alias:
         keyword: AS

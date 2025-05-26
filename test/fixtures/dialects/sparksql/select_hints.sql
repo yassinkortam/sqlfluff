@@ -110,9 +110,3 @@ SELECT /*+ BROADCAST(t1), MERGE(t1, t2) */
     t1.b,
     t2.c
 FROM t1 INNER JOIN t2 ON t1.key = t2.key;
-
-SELECT /*+ BROADCAST(db.t1) */
-    t1.a,
-    t1.b,
-    t2.c
-FROM t1 INNER JOIN t2 ON t1.key = t2.key;

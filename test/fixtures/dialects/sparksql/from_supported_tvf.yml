@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 0ab1047e58f773471f2a115785ad6a93b621ff5d8c8cdca69cb8a0e389e13fa9
+_hash: fb7e9e23268771280db637c71225316b840dff2c1ab34bb067d00b2bf87e2433
 file:
 - statement:
     select_statement:
@@ -20,22 +20,20 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      numeric_literal: '6'
-                      binary_operator: +
-                      function:
-                        function_name:
-                          function_name_identifier: cos
-                        function_contents:
-                          bracketed:
-                            start_bracket: (
-                            expression:
-                              numeric_literal: '3'
-                            end_bracket: )
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    numeric_literal: '6'
+                    binary_operator: +
+                    function:
+                      function_name:
+                        function_name_identifier: cos
+                      bracketed:
+                        start_bracket: (
+                        expression:
+                          numeric_literal: '3'
+                        end_bracket: )
+                  end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -52,12 +50,11 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      numeric_literal: '5'
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    numeric_literal: '5'
+                  end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -74,15 +71,14 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - expression:
-                      numeric_literal: '5'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '10'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - expression:
+                    numeric_literal: '5'
+                - comma: ','
+                - expression:
+                    numeric_literal: '10'
+                - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -99,18 +95,17 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - expression:
-                      numeric_literal: '5'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '10'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '2'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - expression:
+                    numeric_literal: '5'
+                - comma: ','
+                - expression:
+                    numeric_literal: '10'
+                - comma: ','
+                - expression:
+                    numeric_literal: '2'
+                - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -127,21 +122,20 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - expression:
-                      numeric_literal: '0'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '10'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '2'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '200'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - expression:
+                    numeric_literal: '0'
+                - comma: ','
+                - expression:
+                    numeric_literal: '10'
+                - comma: ','
+                - expression:
+                    numeric_literal: '2'
+                - comma: ','
+                - expression:
+                    numeric_literal: '200'
+                - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -160,15 +154,14 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - expression:
-                      numeric_literal: '5'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '8'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - expression:
+                    numeric_literal: '5'
+                - comma: ','
+                - expression:
+                    numeric_literal: '8'
+                - end_bracket: )
             alias_expression:
               keyword: AS
               naked_identifier: test
@@ -190,15 +183,14 @@ file:
               function:
                 function_name:
                   function_name_identifier: range
-                function_contents:
-                  bracketed:
-                  - start_bracket: (
-                  - expression:
-                      numeric_literal: '5'
-                  - comma: ','
-                  - expression:
-                      numeric_literal: '8'
-                  - end_bracket: )
+                bracketed:
+                - start_bracket: (
+                - expression:
+                    numeric_literal: '5'
+                - comma: ','
+                - expression:
+                    numeric_literal: '8'
+                - end_bracket: )
             alias_expression:
               naked_identifier: test
 - statement_terminator: ;

@@ -1,5 +1,4 @@
 """The Test file for CLI Formatters."""
-
 import pathlib
 import re
 import textwrap
@@ -10,12 +9,12 @@ from sqlfluff.cli.commands import fix
 from sqlfluff.cli.formatters import OutputStreamFormatter
 from sqlfluff.cli.outputstream import FileOutput
 from sqlfluff.core import FluffConfig
+from sqlfluff.core.enums import Color
 from sqlfluff.core.errors import SQLLintError
 from sqlfluff.core.parser import RawSegment
 from sqlfluff.core.parser.markers import PositionMarker
 from sqlfluff.core.rules import RuleGhost
 from sqlfluff.core.templaters.base import TemplatedFile
-from sqlfluff.core.types import Color
 
 
 def escape_ansi(line):
@@ -46,8 +45,8 @@ def test__cli__formatters__violation(tmpdir):
             TemplatedFile.from_string("      \n\n  foobarbar"),
         ),
     )
-    r = RuleGhost("A", "some-name", "DESC")
-    v = SQLLintError(description=r.description, segment=s, rule=r)
+    r = RuleGhost("A", "DESC")
+    v = SQLLintError(segment=s, rule=r)
     formatter = OutputStreamFormatter(
         FileOutput(FluffConfig(require_dialect=False), str(tmpdir / "out.txt")), False
     )
@@ -57,7 +56,7 @@ def test__cli__formatters__violation(tmpdir):
     # it's at the third position in that line (i.e. there
     # are two characters between it and the preceding
     # newline).
-    assert escape_ansi(f) == "L:   3 | P:   3 |    A | DESC [some-name]"
+    assert escape_ansi(f) == "L:   3 | P:   3 |    A | DESC"
 
 
 def test__cli__helpers__colorize(tmpdir):
@@ -91,7 +90,7 @@ def test__cli__helpers__cli_table(tmpdir):
                 "rule VARCHAR(30)"
                 ");"
             ),
-            ["--force", "--dialect", "postgres", "--disable-progress-bar", "--nocolor"],
+            ["--force", "--dialect", "postgres", "--disable_progress_bar", "--nocolor"],
             (
                 "CREATE TABLE IF NOT EXISTS vuln.software_name_dictionary("
                 "id SERIAL PRIMARY KEY"

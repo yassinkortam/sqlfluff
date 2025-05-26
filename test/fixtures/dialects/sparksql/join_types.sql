@@ -138,3 +138,4 @@ INNER JOIN table2
     ON table1.a = table2.a
 INNER JOIN table3
     ON table1.a = table3.a
+

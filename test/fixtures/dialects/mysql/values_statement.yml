@@ -3,37 +3,43 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 51d7d52e8904436e491ebc07912e37a2a3803e329c3f1df3f9c3e2ba9209651a
+_hash: 1a7cb6b0f38f546f67eb9e65afe4e6128acc32f236820b9b88d2a3300ce1b3fe
 file:
 - statement:
     values_clause:
     - keyword: VALUES
     - keyword: ROW
     - bracketed:
-        start_bracket: (
-        quoted_literal: "'a'"
-        comma: ','
-        numeric_literal: '1'
-        end_bracket: )
+      - start_bracket: (
+      - expression:
+          quoted_literal: "'a'"
+      - comma: ','
+      - expression:
+          numeric_literal: '1'
+      - end_bracket: )
     - comma: ','
     - keyword: ROW
     - bracketed:
-        start_bracket: (
-        quoted_literal: "'b'"
-        comma: ','
-        numeric_literal: '2'
-        end_bracket: )
+      - start_bracket: (
+      - expression:
+          quoted_literal: "'b'"
+      - comma: ','
+      - expression:
+          numeric_literal: '2'
+      - end_bracket: )
 - statement_terminator: ;
 - statement:
     values_clause:
     - keyword: VALUES
     - keyword: ROW
     - bracketed:
-        start_bracket: (
-        quoted_literal: "'a'"
-        comma: ','
-        numeric_literal: '1'
-        end_bracket: )
+      - start_bracket: (
+      - expression:
+          quoted_literal: "'a'"
+      - comma: ','
+      - expression:
+          numeric_literal: '1'
+      - end_bracket: )
     - comma: ','
     - keyword: ROW
     - bracketed:
@@ -42,12 +48,11 @@ file:
           function:
             function_name:
               function_name_identifier: upper
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  quoted_literal: "'b'"
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                quoted_literal: "'b'"
+              end_bracket: )
       - comma: ','
       - expression:
         - numeric_literal: '2'

@@ -42,7 +42,7 @@ test_keyword_as_identifier:
 
   configs:
     rules:
-      references.keywords:
+      L029:
         only_aliases: false
 ```
 

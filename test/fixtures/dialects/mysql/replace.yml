@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 5e56839dde36d79ac2153e62446f262002bffb704a7185d5e155ef88f1e1b528
+_hash: 45188ef87789eed9f796536a6b1b2b5910c6232cfa641faa4914824087d321f3
 file:
 - statement:
     replace_statement:
@@ -14,9 +14,11 @@ file:
         keyword: VALUES
         bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -42,16 +44,20 @@ file:
       - keyword: VALUES
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
       - comma: ','
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '11'
+        - expression:
+            numeric_literal: '11'
         - comma: ','
-        - numeric_literal: '22'
+        - expression:
+            numeric_literal: '22'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -63,16 +69,20 @@ file:
       - keyword: VALUE
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
       - comma: ','
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '11'
+        - expression:
+            numeric_literal: '11'
         - comma: ','
-        - numeric_literal: '22'
+        - expression:
+            numeric_literal: '22'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -92,9 +102,11 @@ file:
         keyword: VALUES
         bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -115,17 +127,21 @@ file:
       - keyword: ROW
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
       - comma: ','
       - keyword: ROW
       - bracketed:
         - start_bracket: (
-        - numeric_literal: '11'
+        - expression:
+            numeric_literal: '11'
         - comma: ','
-        - numeric_literal: '22'
+        - expression:
+            numeric_literal: '22'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -138,9 +154,11 @@ file:
         keyword: VALUES
         bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -153,9 +171,11 @@ file:
         keyword: VALUES
         bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -169,9 +189,11 @@ file:
         keyword: VALUES
         bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
 - statement_terminator: ;
 - statement:
@@ -190,9 +212,11 @@ file:
         keyword: VALUES
         bracketed:
         - start_bracket: (
-        - numeric_literal: '1'
+        - expression:
+            numeric_literal: '1'
         - comma: ','
-        - numeric_literal: '2'
+        - expression:
+            numeric_literal: '2'
         - end_bracket: )
 - statement_terminator: ;
 - statement:

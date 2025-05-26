@@ -13,10 +13,6 @@ select as struct
   '1' as bb,
   2 as aa;
 
-select distinct as struct
-    '1' as bb,
-    2 as aa;
-
 -- Example of explicitly building a struct in a select clause.
 select
   struct(
@@ -50,10 +46,3 @@ SELECT
     some_other_field
   ) AS col
 FROM table;
-
--- Empty STRUCT within TO_JSON
-SELECT
-  TO_JSON(STRUCT()) AS col
-FROM table;
-
-SELECT (1*1, 2) IN (STRUCT(1 AS a, 2 AS b));

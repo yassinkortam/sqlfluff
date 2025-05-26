@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 73a7c191d4f98f8820605af6e84e8c2afa8b19957574d4573dcaba5e9e580e47
+_hash: 7ddd990903aaf070992fc87aca63aac0b651b984d60136b2975d2b98d7df5b4c
 file:
 - statement:
     select_statement:
@@ -13,27 +13,25 @@ file:
           function:
             function_name:
               function_name_identifier: DATE_ADD
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  function:
-                    function_name:
-                      function_name_identifier: CURDATE
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                      numeric_literal:
-                        sign_indicator: '-'
-                        numeric_literal: '30'
-                    date_part: DAY
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                function:
+                  function_name:
+                    function_name_identifier: CURDATE
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
+            - comma: ','
+            - expression:
+                interval_expression:
+                  keyword: INTERVAL
+                  expression:
+                    numeric_literal:
+                      sign_indicator: '-'
+                      numeric_literal: '30'
+                  date_part: DAY
+            - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -43,19 +41,18 @@ file:
           function:
             function_name:
               function_name_identifier: SUBDATE
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  quoted_literal: "'2008-01-02'"
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                      numeric_literal: '31'
-                    date_part: DAY
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                quoted_literal: "'2008-01-02'"
+            - comma: ','
+            - expression:
+                interval_expression:
+                  keyword: INTERVAL
+                  expression:
+                    numeric_literal: '31'
+                  date_part: DAY
+            - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -65,27 +62,25 @@ file:
           function:
             function_name:
               function_name_identifier: ADDDATE
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  function:
-                    function_name:
-                      function_name_identifier: CURDATE
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                      numeric_literal:
-                        sign_indicator: '-'
-                        numeric_literal: '30'
-                    date_part: DAY
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                function:
+                  function_name:
+                    function_name_identifier: CURDATE
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
+            - comma: ','
+            - expression:
+                interval_expression:
+                  keyword: INTERVAL
+                  expression:
+                    numeric_literal:
+                      sign_indicator: '-'
+                      numeric_literal: '30'
+                  date_part: DAY
+            - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -95,19 +90,18 @@ file:
           function:
             function_name:
               function_name_identifier: DATE_SUB
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  quoted_literal: "'1992-12-31 23:59:59.000002'"
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                      quoted_literal: "'1.999999'"
-                    date_part: SECOND_MICROSECOND
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                quoted_literal: "'1992-12-31 23:59:59.000002'"
+            - comma: ','
+            - expression:
+                keyword: INTERVAL
+                date_constructor_literal: "'1.999999'"
+            - expression:
+                column_reference:
+                  naked_identifier: SECOND_MICROSECOND
+            - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -117,19 +111,18 @@ file:
           function:
             function_name:
               function_name_identifier: DATE_ADD
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  quoted_literal: "'2100-12-31 23:59:59'"
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                      quoted_literal: "'1:1'"
-                    date_part: MINUTE_SECOND
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                quoted_literal: "'2100-12-31 23:59:59'"
+            - comma: ','
+            - expression:
+                keyword: INTERVAL
+                date_constructor_literal: "'1:1'"
+            - expression:
+                column_reference:
+                  naked_identifier: MINUTE_SECOND
+            - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -139,27 +132,25 @@ file:
           function:
             function_name:
               function_name_identifier: DATE_ADD
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  function:
-                    function_name:
-                      function_name_identifier: CURDATE
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                    - numeric_literal: '7'
-                    - binary_operator: '*'
-                    - numeric_literal: '4'
-                    date_part: DAY
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                function:
+                  function_name:
+                    function_name_identifier: CURDATE
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
+            - comma: ','
+            - expression:
+                interval_expression:
+                  keyword: INTERVAL
+                  expression:
+                  - numeric_literal: '7'
+                  - binary_operator: '*'
+                  - numeric_literal: '4'
+                  date_part: DAY
+            - end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -169,26 +160,24 @@ file:
           function:
             function_name:
               function_name_identifier: ADDDATE
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  function:
-                    function_name:
-                      function_name_identifier: CURDATE
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                      column_reference:
-                        naked_identifier: col1
-                    date_part: DAY
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                function:
+                  function_name:
+                    function_name_identifier: CURDATE
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
+            - comma: ','
+            - expression:
+                interval_expression:
+                  keyword: INTERVAL
+                  expression:
+                    column_reference:
+                      naked_identifier: col1
+                  date_part: DAY
+            - end_bracket: )
       from_clause:
         keyword: FROM
         from_expression:
@@ -205,29 +194,27 @@ file:
           function:
             function_name:
               function_name_identifier: SUBDATE
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  function:
-                    function_name:
-                      function_name_identifier: CURDATE
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
-              - comma: ','
-              - expression:
-                  interval_expression:
-                    keyword: INTERVAL
-                    expression:
-                    - column_reference:
-                        naked_identifier: col1
-                    - binary_operator: +
-                    - column_reference:
-                        naked_identifier: col2
-                    date_part: DAY
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                function:
+                  function_name:
+                    function_name_identifier: CURDATE
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
+            - comma: ','
+            - expression:
+                interval_expression:
+                  keyword: INTERVAL
+                  expression:
+                  - column_reference:
+                      naked_identifier: col1
+                  - binary_operator: +
+                  - column_reference:
+                      naked_identifier: col2
+                  date_part: DAY
+            - end_bracket: )
       from_clause:
         keyword: FROM
         from_expression:

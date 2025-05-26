@@ -1,38 +1,26 @@
 """Surrogate class for working with Segment collections."""
-
-from collections.abc import Iterable, Iterator
-from typing import (
-    Any,
-    Callable,
-    Optional,
-    SupportsIndex,
-    Union,
-    overload,
-)
+from typing import Any, Callable, Iterable, Iterator, List, Optional, overload
 
 from sqlfluff.core.parser import BaseSegment
 from sqlfluff.core.templaters.base import TemplatedFile
 from sqlfluff.utils.functional.raw_file_slices import RawFileSlices
 
+
 PredicateType = Callable[[BaseSegment], bool]
 
 
-class Segments(tuple[BaseSegment, ...]):
+class Segments(tuple):
     """Encapsulates a sequence of one or more BaseSegments.
 
     The segments may or may not be contiguous in a parse tree.
     Provides useful operations on a sequence of segments to simplify rule creation.
     """
 
-    def __new__(
-        cls, *segments: BaseSegment, templated_file: Optional[TemplatedFile] = None
-    ) -> "Segments":
+    def __new__(cls, *segments, templated_file=None):
         """Override new operator."""
-        return super().__new__(cls, segments)
+        return super(Segments, cls).__new__(cls, segments)
 
-    def __init__(
-        self, *_: BaseSegment, templated_file: Optional[TemplatedFile] = None
-    ) -> None:
+    def __init__(self, *_: BaseSegment, templated_file: Optional[TemplatedFile] = None):
         self.templated_file = templated_file
 
     def __add__(self, segments_) -> "Segments":
@@ -89,7 +77,7 @@ class Segments(tuple[BaseSegment, ...]):
             )
         return RawFileSlices(
             *sorted(raw_slices, key=lambda slice_: slice_.source_idx),
-            templated_file=self.templated_file,
+            templated_file=self.templated_file
         )
 
     # TODO:This method isn't used as at 2022-08-10. Consider removing in future.
@@ -103,7 +91,7 @@ class Segments(tuple[BaseSegment, ...]):
 
     def recursive_crawl_all(self) -> "Segments":  # pragma: no cover
         """Recursively crawl all descendant segments."""
-        segments: list[BaseSegment] = []
+        segments: List[BaseSegment] = []
         for s in self:
             for i in s.recursive_crawl_all():
                 segments.append(i)
@@ -111,7 +99,7 @@ class Segments(tuple[BaseSegment, ...]):
 
     def recursive_crawl(self, *seg_type: str, recurse_into: bool = True) -> "Segments":
         """Recursively crawl for segments of a given type."""
-        segments: list[BaseSegment] = []
+        segments: List[BaseSegment] = []
         for s in self:
             for i in s.recursive_crawl(*seg_type, recurse_into=recurse_into):
                 segments.append(i)
@@ -122,7 +110,7 @@ class Segments(tuple[BaseSegment, ...]):
         predicate: Optional[PredicateType] = None,
     ) -> "Segments":
         """Returns an object with children of the segments in this object."""
-        child_segments: list[BaseSegment] = []
+        child_segments: List[BaseSegment] = []
         for s in self:
             for child in s.segments:
                 if predicate is None or predicate(child):
@@ -151,41 +139,33 @@ class Segments(tuple[BaseSegment, ...]):
         # If no segment satisfies "predicates", return empty Segments.
         return Segments(templated_file=self.templated_file)
 
+    @overload  # type: ignore
+    def __getitem__(self, item: int) -> BaseSegment:  # pragma: no cover
+        pass
+
+    @overload
+    def __getitem__(self, item: slice) -> "Segments":  # pragma: no cover
+        pass
+
     def __iter__(self) -> Iterator[BaseSegment]:  # pragma: no cover
         # Typing understand we are looping BaseSegment
         return super().__iter__()
 
-    @overload
-    def __getitem__(self, item: SupportsIndex) -> BaseSegment:
-        """Individual "getting" returns a single segment.
-
-        NOTE: Using `SupportsIndex` rather than `int` is to ensure
-        type compatibility with the parent `tuple` implementation.
-        """
-
-    @overload
-    def __getitem__(self, item: slice) -> "Segments":
-        """Getting a slice returns another `Segments` object."""
-
-    def __getitem__(
-        self, item: Union[SupportsIndex, slice]
-    ) -> Union[BaseSegment, "Segments"]:
+    def __getitem__(self, item):  # type: ignore
         result = super().__getitem__(item)
         if isinstance(result, tuple):
             return Segments(*result, templated_file=self.templated_file)
         else:
             return result
 
-    def get(
-        self, index: int = 0, *, default: Optional[BaseSegment] = None
-    ) -> Optional[BaseSegment]:
+    def get(self, index: int = 0, *, default: Any = None) -> Optional[BaseSegment]:
         """Return specified item. Returns default if index out of range."""
         try:
             return self[index]
         except IndexError:
             return default
 
-    def apply(self, fn: Callable[[BaseSegment], Any]) -> list[Any]:
+    def apply(self, fn: Callable[[BaseSegment], Any]) -> List[Any]:
         """Apply function to every item."""
         return [fn(s) for s in self]
 

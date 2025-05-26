@@ -3,5 +3,5 @@ dialect = bigquery
 ignore = templating
 fix_even_unparsable = True
 
-[sqlfluff:rules:capitalisation.keywords]
+[sqlfluff:rules:L010]
 capitalisation_policy = upper

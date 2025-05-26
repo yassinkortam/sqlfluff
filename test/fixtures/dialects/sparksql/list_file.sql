@@ -8,4 +8,5 @@ LIST FILE "/path/to/some/directory";
 
 LIST FILES "/path with space/cde.txt" '/path with space/fgh.txt';
 
-LIST FILE /tmp/test;
+-- NB: Non-quoted paths are not supported in SQLFluff currently
+--LIST FILE /tmp/test;

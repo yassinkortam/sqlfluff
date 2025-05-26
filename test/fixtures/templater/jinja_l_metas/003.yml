@@ -8,12 +8,8 @@ file:
           whitespace: '  '
           select_clause_element:
             numeric_literal: '1'
-          dedent: ""
+        dedent: ""
   - newline: "\n"
   - whitespace: '  '
-  - placeholder: '{% if false %}'
-  - indent: ""
-  - placeholder: "\n    + 2\n  "
-  - dedent: ""
-  - placeholder: '{% endif %}'
+  - placeholder: '{% if false %}... [11 unused template characters] ...{% endif %}'
   - end_of_file: ""

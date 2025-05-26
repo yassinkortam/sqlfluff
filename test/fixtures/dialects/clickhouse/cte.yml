@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 288586b8ae01c4a8a0db3b6217b83c1c973ad88bf503382d17e80ef7b3d55ad6
+_hash: 5f5efb217212b97c6ea3f52e5a265c8dc25e078729131d82262c8a1cbd33285d
 file:
 - statement:
     with_compound_statement:
@@ -31,12 +31,11 @@ file:
             function:
               function_name:
                 function_name_identifier: toString
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    numeric_literal: '1'
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  numeric_literal: '1'
+                end_bracket: )
             alias_expression:
               keyword: as
               naked_identifier: Test_string
@@ -45,15 +44,14 @@ file:
             function:
               function_name:
                 function_name_identifier: toDateTime64
-              function_contents:
-                bracketed:
-                - start_bracket: (
-                - expression:
-                    quoted_literal: "'2022-05-25'"
-                - comma: ','
-                - expression:
-                    numeric_literal: '3'
-                - end_bracket: )
+              bracketed:
+              - start_bracket: (
+              - expression:
+                  quoted_literal: "'2022-05-25'"
+              - comma: ','
+              - expression:
+                  numeric_literal: '3'
+              - end_bracket: )
             alias_expression:
               keyword: as
               naked_identifier: Test_dateTime64
@@ -62,15 +60,14 @@ file:
             function:
               function_name:
                 function_name_identifier: ifNull
-              function_contents:
-                bracketed:
-                - start_bracket: (
-                - expression:
-                    null_literal: 'null'
-                - comma: ','
-                - expression:
-                    quoted_literal: "'TestNull'"
-                - end_bracket: )
+              bracketed:
+              - start_bracket: (
+              - expression:
+                  null_literal: 'null'
+              - comma: ','
+              - expression:
+                  quoted_literal: "'TestNull'"
+              - end_bracket: )
             alias_expression:
               keyword: as
               naked_identifier: testIf
@@ -79,15 +76,14 @@ file:
             function:
               function_name:
                 function_name_identifier: JSONExtractString
-              function_contents:
-                bracketed:
-                - start_bracket: (
-                - expression:
-                    quoted_literal: "'{\"abc\": \"hello\"}'"
-                - comma: ','
-                - expression:
-                    quoted_literal: "'abc'"
-                - end_bracket: )
+              bracketed:
+              - start_bracket: (
+              - expression:
+                  quoted_literal: "'{\"abc\": \"hello\"}'"
+              - comma: ','
+              - expression:
+                  quoted_literal: "'abc'"
+              - end_bracket: )
             alias_expression:
               keyword: as
               naked_identifier: testJSON
@@ -131,13 +127,12 @@ file:
           - function:
               function_name:
                 function_name_identifier: toDate
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    column_reference:
-                      naked_identifier: ts_upper_bound
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    naked_identifier: ts_upper_bound
+                end_bracket: )
           - binary_operator: AND
           - column_reference:
               naked_identifier: EventTime
@@ -155,13 +150,12 @@ file:
           function:
             function_name:
               function_name_identifier: sum
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: bytes
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: bytes
+              end_bracket: )
         keyword: as
         naked_identifier: s
       select_statement:
@@ -171,13 +165,12 @@ file:
             function:
               function_name:
                 function_name_identifier: formatReadableSize
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    column_reference:
-                      naked_identifier: s
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    naked_identifier: s
+                end_bracket: )
         - comma: ','
         - select_clause_element:
             column_reference:
@@ -217,13 +210,12 @@ file:
                     function:
                       function_name:
                         function_name_identifier: sum
-                      function_contents:
-                        bracketed:
-                          start_bracket: (
-                          expression:
-                            column_reference:
-                              naked_identifier: bytes
-                          end_bracket: )
+                      bracketed:
+                        start_bracket: (
+                        expression:
+                          column_reference:
+                            naked_identifier: bytes
+                        end_bracket: )
                 from_clause:
                   keyword: FROM
                   from_expression:
@@ -252,13 +244,12 @@ file:
                   function:
                     function_name:
                       function_name_identifier: sum
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        expression:
-                          column_reference:
-                            naked_identifier: bytes
-                        end_bracket: )
+                    bracketed:
+                      start_bracket: (
+                      expression:
+                        column_reference:
+                          naked_identifier: bytes
+                      end_bracket: )
                   binary_operator: /
                   column_reference:
                     naked_identifier: total_disk_usage
@@ -294,8 +285,7 @@ file:
         - keyword: DESC
         limit_clause:
           keyword: LIMIT
-          limit_clause_component:
-            numeric_literal: '10'
+          numeric_literal: '10'
 - statement_terminator: ;
 - statement:
     with_compound_statement:

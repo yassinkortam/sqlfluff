@@ -1,7 +1,6 @@
 """This is an example of how to use the simple sqlfluff api."""
 
-from typing import Any, Iterator, Union
-
+from typing import Any, Dict, Iterator, List, Union
 import sqlfluff
 
 #  -------- LINTING ----------
@@ -13,7 +12,7 @@ lint_result = sqlfluff.lint(my_bad_query, dialect="bigquery")
 # lint_result =
 # [
 #     {
-#         "code": "CP01",
+#         "code": "L010",
 #         "line_no": 1,
 #         "line_pos": 1,
 #         "description": "Keywords must be consistently upper case.",
@@ -28,11 +27,11 @@ fix_result_1 = sqlfluff.fix(my_bad_query, dialect="bigquery")
 # fix_result_1 = 'SELECT  *, 1, blah AS  foo  FROM myschema.mytable\n'
 
 # We can also fix just specific rules.
-fix_result_2 = sqlfluff.fix(my_bad_query, rules=["CP01"])
+fix_result_2 = sqlfluff.fix(my_bad_query, rules=["L010"])
 # fix_result_2 = 'SELECT  *, 1, blah AS  fOO  FROM mySchema.myTable'
 
 # Or a subset of rules...
-fix_result_3 = sqlfluff.fix(my_bad_query, rules=["CP01", "CP02"])
+fix_result_3 = sqlfluff.fix(my_bad_query, rules=["L010", "L014"])
 # fix_result_3 = 'SELECT  *, 1, blah AS  fOO  FROM myschema.mytable'
 
 #  -------- PARSING ----------
@@ -46,8 +45,8 @@ parse_result = sqlfluff.parse(my_bad_query)
 
 
 def get_json_segment(
-    parse_result: dict[str, Any], segment_type: str
-) -> Iterator[Union[str, dict[str, Any], list[dict[str, Any]]]]:
+    parse_result: Dict[str, Any], segment_type: str
+) -> Iterator[Union[str, Dict[str, Any], List[Dict[str, Any]]]]:
     """Recursively search JSON parse result for specified segment type.
 
     Args:
@@ -55,7 +54,7 @@ def get_json_segment(
         segment_type (str): The segment type to search for.
 
     Yields:
-        Iterator[Union[str, dict[str, Any], list[dict[str, Any]]]]:
+        Iterator[Union[str, Dict[str, Any], List[Dict[str, Any]]]]:
         Retrieves children of specified segment type as either a string for a raw
         segment or as JSON or an array of JSON for non-raw segments.
     """

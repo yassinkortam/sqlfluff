@@ -1,9 +1,8 @@
 [sqlfluff]
 dialect = snowflake
 templater = jinja
-exclude_rules = AL01,LT05,AL07,ST06,ST01
+exclude_rules = L011,L016,L031,L034,L035
 output_line_length = 120
-max_line_length = 120
 
 [sqlfluff:layout:type:binary_operator]
 line_position = leading
@@ -11,17 +10,19 @@ line_position = leading
 [sqlfluff:layout:type:comparison_operator]
 line_position = leading
 
-[sqlfluff:indentation]
+# Some rules can be configured directly from the config common to other rules.
+[sqlfluff:rules]
 tab_space_size = 2
+max_line_length = 120
 
-[sqlfluff:rules:capitalisation.keywords]  # Keywords
+[sqlfluff:rules:L010]  # Keywords
 capitalisation_policy = upper
 
-[sqlfluff:rules:AL03]  # Column expressions
+[sqlfluff:rules:L013]  # Column expressions
 allow_scalar = False
 
-[sqlfluff:rules:capitalisation.identifiers]  # Unquoted identifiers
+[sqlfluff:rules:L014]  # Unquoted identifiers
 extended_capitalisation_policy = lower
 
-[sqlfluff:rules:capitalisation.functions]  # Function names
+[sqlfluff:rules:L030]  # Function names
 extended_capitalisation_policy = lower

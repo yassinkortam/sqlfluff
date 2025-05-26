@@ -1,26 +1,24 @@
 """The simple public API methods."""
 
-from typing import Any, Optional
-
+from typing import Any, Dict, List, Optional
 from sqlfluff.core import (
+    dialect_selector,
     FluffConfig,
     Linter,
     SQLBaseError,
     SQLFluffUserError,
-    dialect_selector,
 )
-from sqlfluff.core.types import ConfigMappingType
 
 
 def get_simple_config(
     dialect: Optional[str] = None,
-    rules: Optional[list[str]] = None,
-    exclude_rules: Optional[list[str]] = None,
+    rules: Optional[List[str]] = None,
+    exclude_rules: Optional[List[str]] = None,
     config_path: Optional[str] = None,
 ) -> FluffConfig:
     """Get a config object from simple API arguments."""
     # Create overrides for simple API arguments.
-    overrides: ConfigMappingType = {}
+    overrides = {}
     if dialect is not None:
         # Check the requested dialect exists and is valid.
         try:
@@ -50,42 +48,38 @@ def get_simple_config(
 class APIParsingError(ValueError):
     """An exception which holds a set of violations."""
 
-    def __init__(self, violations: list[SQLBaseError], *args: Any):
+    def __init__(self, violations: List[SQLBaseError], *args: Any):
         self.violations = violations
-        msg = f"Found {len(violations)} issues while parsing string."
+        self.msg = f"Found {len(violations)} issues while parsing string."
         for viol in violations:
-            msg += f"\n{viol!s}"
-        super().__init__(msg, *args)
+            self.msg += f"\n{viol!s}"
+        super().__init__(self.msg, *args)
 
 
 def lint(
     sql: str,
     dialect: str = "ansi",
-    rules: Optional[list[str]] = None,
-    exclude_rules: Optional[list[str]] = None,
-    config: Optional[FluffConfig] = None,
+    rules: Optional[List[str]] = None,
+    exclude_rules: Optional[List[str]] = None,
     config_path: Optional[str] = None,
-) -> list[dict[str, Any]]:
+) -> List[Dict[str, Any]]:
     """Lint a SQL string.
 
     Args:
         sql (:obj:`str`): The SQL to be linted.
         dialect (:obj:`str`, optional): A reference to the dialect of the SQL
             to be linted. Defaults to `ansi`.
-        rules (:obj:`Optional[list[str]`, optional): A list of rule
+        rules (:obj:`Optional[List[str]`, optional): A list of rule
             references to lint for. Defaults to None.
-        exclude_rules (:obj:`Optional[list[str]`, optional): A list of rule
+        exclude_rules (:obj:`Optional[List[str]`, optional): A list of rule
             references to avoid linting for. Defaults to None.
-        config (:obj:`Optional[FluffConfig]`, optional): A configuration object
-            to use for the operation. Defaults to None.
-        config_path (:obj:`Optional[str]`, optional): A path to a .sqlfluff config,
-            which is only used if a `config` is not already provided.
+        config_path (:obj:`Optional[str]`, optional): A path to a .sqlfluff config.
             Defaults to None.
 
     Returns:
-        :obj:`list[dict[str, Any]]` for each violation found.
+        :obj:`List[Dict[str, Any]]` for each violation found.
     """
-    cfg = config or get_simple_config(
+    cfg = get_simple_config(
         dialect=dialect,
         rules=rules,
         exclude_rules=exclude_rules,
@@ -102,9 +96,8 @@ def lint(
 def fix(
     sql: str,
     dialect: str = "ansi",
-    rules: Optional[list[str]] = None,
-    exclude_rules: Optional[list[str]] = None,
-    config: Optional[FluffConfig] = None,
+    rules: Optional[List[str]] = None,
+    exclude_rules: Optional[List[str]] = None,
     config_path: Optional[str] = None,
     fix_even_unparsable: Optional[bool] = None,
 ) -> str:
@@ -114,22 +107,17 @@ def fix(
         sql (:obj:`str`): The SQL to be fixed.
         dialect (:obj:`str`, optional): A reference to the dialect of the SQL
             to be fixed. Defaults to `ansi`.
-        rules (:obj:`Optional[list[str]`, optional): A subset of rule
+        rules (:obj:`Optional[List[str]`, optional): A subset of rule
             references to fix for. Defaults to None.
-        exclude_rules (:obj:`Optional[list[str]`, optional): A subset of rule
+        exclude_rules (:obj:`Optional[List[str]`, optional): A subset of rule
             references to avoid fixing for. Defaults to None.
-        config (:obj:`Optional[FluffConfig]`, optional): A configuration object
-            to use for the operation. Defaults to None.
-        config_path (:obj:`Optional[str]`, optional): A path to a .sqlfluff config,
-            which is only used if a `config` is not already provided.
+        config_path (:obj:`Optional[str]`, optional): A path to a .sqlfluff config.
             Defaults to None.
-        fix_even_unparsable (:obj:`bool`, optional): Optional override for the
-            corresponding SQLFluff configuration value.
 
     Returns:
         :obj:`str` for the fixed SQL if possible.
     """
-    cfg = config or get_simple_config(
+    cfg = get_simple_config(
         dialect=dialect,
         rules=rules,
         exclude_rules=exclude_rules,
@@ -155,30 +143,21 @@ def fix(
 def parse(
     sql: str,
     dialect: str = "ansi",
-    config: Optional[FluffConfig] = None,
     config_path: Optional[str] = None,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Parse a SQL string.
 
     Args:
         sql (:obj:`str`): The SQL to be parsed.
         dialect (:obj:`str`, optional): A reference to the dialect of the SQL
             to be parsed. Defaults to `ansi`.
-        config (:obj:`Optional[FluffConfig]`, optional): A configuration object
-            to use for the operation. Defaults to None.
-        config_path (:obj:`Optional[str]`, optional): A path to a .sqlfluff config,
-            which is only used if a `config` is not already provided.
+        config_path (:obj:`Optional[str]`, optional): A path to a .sqlfluff config.
             Defaults to None.
 
     Returns:
         :obj:`Dict[str, Any]` JSON containing the parsed structure.
-
-    Note:
-        In the case of multiple potential variants from the raw source file
-        only the first variant is returned by the simple API. For access to
-        the other variants, use the underlying main API directly.
     """
-    cfg = config or get_simple_config(
+    cfg = get_simple_config(
         dialect=dialect,
         config_path=config_path,
     )
@@ -186,14 +165,9 @@ def parse(
 
     parsed = linter.parse_string(sql)
     # If we encounter any parsing errors, raise them in a combined issue.
-    violations = parsed.violations
-    if violations:
-        raise APIParsingError(violations)
+    if parsed.violations:
+        raise APIParsingError(parsed.violations)
     # Return a JSON representation of the parse tree.
-    # NOTE: For the simple API - only a single variant is returned.
-    root_variant = parsed.root_variant()
-    assert root_variant, "Files parsed without violations must have a valid variant"
-    assert root_variant.tree, "Files parsed without violations must have a valid tree"
-    record = root_variant.tree.as_record(show_raw=True)
-    assert record
-    return record
+    if parsed.tree is None:  # pragma: no cover
+        return {}
+    return parsed.tree.as_record(show_raw=True)

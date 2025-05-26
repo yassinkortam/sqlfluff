@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: ae00088f3a646d5a268e8ca8f9efd86b3f29d8a902c70dca694f6b39f2e20b3d
+_hash: e3c7921f426094a0e75a03ed89e0f1ce3af339ad33efb1809cd34ad3a57d0228
 file:
 - statement:
     select_statement:
@@ -15,24 +15,24 @@ file:
       - comma: ','
       - select_clause_element:
           expression:
+            case_expression:
+            - keyword: case
+            - when_clause:
+              - keyword: when
+              - expression:
+                  column_reference:
+                    naked_identifier: col1
+              - keyword: then
+              - expression:
+                  column_reference:
+                    naked_identifier: col2
+            - else_clause:
+                keyword: else
+                expression:
+                  column_reference:
+                    naked_identifier: col3
+            - keyword: end
             cast_expression:
-              case_expression:
-              - keyword: case
-              - when_clause:
-                - keyword: when
-                - expression:
-                    column_reference:
-                      naked_identifier: col1
-                - keyword: then
-                - expression:
-                    column_reference:
-                      naked_identifier: col2
-              - else_clause:
-                  keyword: else
-                  expression:
-                    column_reference:
-                      naked_identifier: col3
-              - keyword: end
               casting_operator: '::'
               data_type:
                 data_type_identifier: text
@@ -57,29 +57,30 @@ file:
       - comma: ','
       - select_clause_element:
           expression:
-            cast_expression:
-            - case_expression:
-              - keyword: case
-              - when_clause:
-                - keyword: when
-                - expression:
-                    column_reference:
-                      naked_identifier: col1
-                - keyword: then
-                - expression:
-                    column_reference:
-                      naked_identifier: col2
-              - else_clause:
-                  keyword: else
-                  expression:
-                    column_reference:
-                      naked_identifier: col3
-              - keyword: end
-            - casting_operator: '::'
-            - data_type:
+          - case_expression:
+            - keyword: case
+            - when_clause:
+              - keyword: when
+              - expression:
+                  column_reference:
+                    naked_identifier: col1
+              - keyword: then
+              - expression:
+                  column_reference:
+                    naked_identifier: col2
+            - else_clause:
+                keyword: else
+                expression:
+                  column_reference:
+                    naked_identifier: col3
+            - keyword: end
+          - cast_expression:
+              casting_operator: '::'
+              data_type:
                 data_type_identifier: int
-            - casting_operator: '::'
-            - data_type:
+          - cast_expression:
+              casting_operator: '::'
+              data_type:
                 data_type_identifier: float
           alias_expression:
             keyword: as
@@ -104,31 +105,30 @@ file:
           function:
             function_name:
               function_name_identifier: cast
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  case_expression:
-                  - keyword: case
-                  - when_clause:
-                    - keyword: when
-                    - expression:
-                        column_reference:
-                          naked_identifier: col1
-                    - keyword: then
-                    - expression:
-                        column_reference:
-                          naked_identifier: col2
-                  - else_clause:
-                      keyword: else
-                      expression:
-                        column_reference:
-                          naked_identifier: col3
-                  - keyword: end
-                keyword: as
-                data_type:
-                  data_type_identifier: text
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                case_expression:
+                - keyword: case
+                - when_clause:
+                  - keyword: when
+                  - expression:
+                      column_reference:
+                        naked_identifier: col1
+                  - keyword: then
+                  - expression:
+                      column_reference:
+                        naked_identifier: col2
+                - else_clause:
+                    keyword: else
+                    expression:
+                      column_reference:
+                        naked_identifier: col3
+                - keyword: end
+              keyword: as
+              data_type:
+                data_type_identifier: text
+              end_bracket: )
           alias_expression:
             keyword: as
             naked_identifier: mycol
@@ -139,40 +139,4 @@ file:
             table_expression:
               table_reference:
                 naked_identifier: table1
-- statement_terminator: ;
-- statement:
-    select_statement:
-      select_clause:
-      - keyword: SELECT
-      - select_clause_element:
-          column_reference:
-            naked_identifier: column1
-      - comma: ','
-      - select_clause_element:
-          expression:
-            case_expression:
-            - keyword: CASE
-            - when_clause:
-              - keyword: WHEN
-              - expression:
-                  quoted_literal: "'test'"
-              - keyword: THEN
-              - expression:
-                  numeric_literal: '12'
-            - else_clause:
-                keyword: ELSE
-                expression:
-                  numeric_literal: '0'
-            - keyword: END
-            comparison_operator:
-            - raw_comparison_operator: '>'
-            - raw_comparison_operator: '='
-            numeric_literal: '0'
-      from_clause:
-        keyword: FROM
-        from_expression:
-          from_expression_element:
-            table_expression:
-              table_reference:
-                naked_identifier: boo
 - statement_terminator: ;

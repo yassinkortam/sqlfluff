@@ -1,15 +1,16 @@
 """Methods to set up appropriate reflow config from file."""
 
+
 # Until we have a proper structure this will work.
 # TODO: Migrate this to the config file.
 from dataclasses import dataclass
-from typing import AbstractSet, Any, Optional
+from typing import AbstractSet, Dict, Set, Optional
 
 from sqlfluff.core.config import FluffConfig
 from sqlfluff.utils.reflow.depthmap import DepthInfo
 
-ConfigElementType = dict[str, str]
-ConfigDictType = dict[str, ConfigElementType]
+ConfigElementType = Dict[str, str]
+ConfigDictType = Dict[str, ConfigElementType]
 
 
 @dataclass()
@@ -20,7 +21,6 @@ class BlockConfig:
     spacing_after: str = "single"
     spacing_within: Optional[str] = None
     line_position: Optional[str] = None
-    keyword_line_position: Optional[str] = None
 
     def incorporate(
         self,
@@ -29,8 +29,7 @@ class BlockConfig:
         within: Optional[str] = None,
         line_position: Optional[str] = None,
         config: Optional[ConfigElementType] = None,
-        keyword_line_position: Optional[str] = None,
-    ) -> None:
+    ):
         """Mutate the config based on additional information."""
         config = config or {}
         self.spacing_before = (
@@ -45,11 +44,6 @@ class BlockConfig:
         self.line_position = (
             line_position or config.get("line_position", None) or self.line_position
         )
-        self.keyword_line_position = (
-            keyword_line_position
-            or config.get("keyword_line_position", None)
-            or self.keyword_line_position
-        )
 
 
 @dataclass(frozen=True)
@@ -62,21 +56,10 @@ class ReflowConfig:
     """
 
     _config_dict: ConfigDictType
-    config_types: set[str]
-    # In production, these values are almost _always_ set because we
-    # use `.from_fluff_config`, but the defaults are here to aid in
-    # testing.
-    tab_space_size: int = 4
-    indent_unit: str = "    "
-    max_line_length: int = 80
-    hanging_indents: bool = False
-    skip_indentation_in: frozenset[str] = frozenset()
-    allow_implicit_indents: bool = False
-    trailing_comments: str = "before"
-    ignore_comment_lines: bool = False
+    config_types: Set[str]
 
     @classmethod
-    def from_dict(cls, config_dict: ConfigDictType, **kwargs: Any) -> "ReflowConfig":
+    def from_dict(cls, config_dict: ConfigDictType):
         """Construct a ReflowConfig from a dict."""
         config_types = set(config_dict.keys())
         # Enrich any of the "align" keys with what they're aligning with.
@@ -91,26 +74,12 @@ class ReflowConfig:
                         if config_dict[seg_type].get("align_scope", None):
                             new_key += ":" + config_dict[seg_type]["align_scope"]
                     config_dict[seg_type][key] = new_key
-        return cls(_config_dict=config_dict, config_types=config_types, **kwargs)
+        return cls(_config_dict=config_dict, config_types=config_types)
 
     @classmethod
-    def from_fluff_config(cls, config: FluffConfig) -> "ReflowConfig":
+    def from_fluff_config(cls, config: FluffConfig):
         """Constructs a ReflowConfig from a FluffConfig."""
-        return cls.from_dict(
-            config.get_section(["layout", "type"]),
-            indent_unit=config.get("indent_unit", ["indentation"]),
-            tab_space_size=config.get("tab_space_size", ["indentation"]),
-            hanging_indents=config.get("hanging_indents", ["indentation"]),
-            max_line_length=config.get("max_line_length"),
-            skip_indentation_in=frozenset(
-                config.get("skip_indentation_in", ["indentation"]).split(",")
-            ),
-            allow_implicit_indents=config.get(
-                "allow_implicit_indents", ["indentation"]
-            ),
-            trailing_comments=config.get("trailing_comments", ["indentation"]),
-            ignore_comment_lines=config.get("ignore_comment_lines", ["indentation"]),
-        )
+        return cls.from_dict(config.get_section(["layout", "type"]))
 
     def get_block_config(
         self,

@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 0cd12e31cdb04cdd7c7a343b46162ebd355f83650f0dfbcedbf1bdadd01d9631
+_hash: 125abd1f84366271677a502bf8200380d0d52a3ecb5009f497b421ccaff8a845
 file:
   statement:
     select_statement:
@@ -25,23 +25,22 @@ file:
           function:
             function_name:
               function_name_identifier: IF
-            function_contents:
-              bracketed:
-              - start_bracket: (
-              - expression:
-                  column_reference:
-                    naked_identifier: _cdn_provider
-                  comparison_operator:
-                  - raw_comparison_operator: '!'
-                  - raw_comparison_operator: '='
-                  quoted_literal: "''"
-              - comma: ','
-              - expression:
-                  quoted_literal: "'CDN'"
-              - comma: ','
-              - expression:
-                  quoted_literal: "'Origin'"
-              - end_bracket: )
+            bracketed:
+            - start_bracket: (
+            - expression:
+                column_reference:
+                  naked_identifier: _cdn_provider
+                comparison_operator:
+                - raw_comparison_operator: '!'
+                - raw_comparison_operator: '='
+                quoted_literal: "''"
+            - comma: ','
+            - expression:
+                quoted_literal: "'CDN'"
+            - comma: ','
+            - expression:
+                quoted_literal: "'Origin'"
+            - end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: source
@@ -50,12 +49,11 @@ file:
           function:
             function_name:
               function_name_identifier: COUNT
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  numeric_literal: '0'
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                numeric_literal: '0'
+              end_bracket: )
           alias_expression:
             keyword: AS
             naked_identifier: total
@@ -73,60 +71,55 @@ file:
               function:
                 function_name:
                   function_name_identifier: UNNEST
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      function:
-                        function_name:
-                          function_name_identifier: split
-                        function_contents:
-                          bracketed:
-                          - start_bracket: (
-                          - expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: REGEXP_REPLACE
-                                function_contents:
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    function:
+                      function_name:
+                        function_name_identifier: split
+                      bracketed:
+                      - start_bracket: (
+                      - expression:
+                          function:
+                            function_name:
+                              function_name_identifier: REGEXP_REPLACE
+                            bracketed:
+                            - start_bracket: (
+                            - expression:
+                                function:
+                                  function_name:
+                                    function_name_identifier: REGEXP_REPLACE
                                   bracketed:
                                   - start_bracket: (
                                   - expression:
                                       function:
                                         function_name:
-                                          function_name_identifier: REGEXP_REPLACE
-                                        function_contents:
-                                          bracketed:
-                                          - start_bracket: (
-                                          - expression:
-                                              function:
-                                                function_name:
-                                                  function_name_identifier: LOWER
-                                                function_contents:
-                                                  bracketed:
-                                                    start_bracket: (
-                                                    expression:
-                                                      column_reference:
-                                                        naked_identifier: resp_vary
-                                                    end_bracket: )
-                                          - comma: ','
-                                          - expression:
-                                              quoted_literal: "'\\\"'"
-                                          - comma: ','
-                                          - expression:
-                                              quoted_literal: "''"
-                                          - end_bracket: )
+                                          function_name_identifier: LOWER
+                                        bracketed:
+                                          start_bracket: (
+                                          expression:
+                                            column_reference:
+                                              naked_identifier: resp_vary
+                                          end_bracket: )
                                   - comma: ','
                                   - expression:
-                                      quoted_literal: "'[, ]+|\\\\\\\\0'"
+                                      quoted_literal: "'\\\"'"
                                   - comma: ','
                                   - expression:
-                                      quoted_literal: "','"
+                                      quoted_literal: "''"
                                   - end_bracket: )
-                          - comma: ','
-                          - expression:
-                              quoted_literal: "','"
-                          - end_bracket: )
-                    end_bracket: )
+                            - comma: ','
+                            - expression:
+                                quoted_literal: "'[, ]+|\\\\\\\\0'"
+                            - comma: ','
+                            - expression:
+                                quoted_literal: "','"
+                            - end_bracket: )
+                      - comma: ','
+                      - expression:
+                          quoted_literal: "','"
+                      - end_bracket: )
+                  end_bracket: )
             alias_expression:
               keyword: AS
               naked_identifier: vary
@@ -166,7 +159,7 @@ file:
             naked_identifier: vary
         - keyword: IS
         - keyword: NOT
-        - null_literal: 'NULL'
+        - keyword: 'NULL'
       orderby_clause:
       - keyword: ORDER
       - keyword: BY

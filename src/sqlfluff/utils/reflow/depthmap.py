@@ -1,12 +1,13 @@
 """The DepthMap class is an enriched sequence of raw segments."""
 
 import logging
-from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import FrozenSet, List, Sequence, Tuple, Type, Dict
 
 from sqlfluff.core.parser import BaseSegment
 from sqlfluff.core.parser.segments.base import PathStep
 from sqlfluff.core.parser.segments.raw import RawSegment
+
 
 reflow_logger = logging.getLogger("sqlfluff.rules.reflow")
 
@@ -22,24 +23,19 @@ class StackPosition:
     @staticmethod
     def _stack_pos_interpreter(path_step: PathStep) -> str:
         """Interpret a path step for stack_positions."""
-        # If no code, then no.
-        if not path_step.code_idxs:
-            return ""
-        # If there's only one code element, this must be it.
-        elif len(path_step.code_idxs) == 1:
+        if path_step.idx == 0 and path_step.idx == path_step.len - 1:
             return "solo"
-        # Check for whether first or last code element.
-        # NOTE: code_idxs is always sorted because of how it's constructed.
-        # That means the lowest is always as the start and the highest at the end.
-        elif path_step.idx == path_step.code_idxs[0]:
+        elif path_step.idx == 0:
             return "start"
-        elif path_step.idx == path_step.code_idxs[-1]:
+        elif path_step.idx == path_step.len - 1:
             return "end"
         else:
             return ""  # NOTE: Empty string evaluates as falsy.
 
     @classmethod
-    def from_path_step(cls, path_step: PathStep) -> "StackPosition":
+    def from_path_step(
+        cls: Type["StackPosition"], path_step: PathStep
+    ) -> "StackPosition":
         """Interpret a PathStep to construct a StackPosition.
 
         The reason we don't just use the same object is partly
@@ -55,31 +51,27 @@ class DepthInfo:
     """An object to hold the depth information for a specific raw segment."""
 
     stack_depth: int
-    stack_hashes: tuple[int, ...]
+    stack_hashes: Tuple[int, ...]
     # This is a convenience cache to speed up operations.
-    stack_hash_set: frozenset[int]
-    stack_class_types: tuple[frozenset[str], ...]
-    stack_positions: dict[int, StackPosition]
+    stack_hash_set: FrozenSet[int]
+    stack_class_types: Tuple[FrozenSet[str], ...]
+    stack_positions: Dict[int, StackPosition]
 
     @classmethod
-    def from_raw_and_stack(
-        cls, raw: RawSegment, stack: Sequence[PathStep]
-    ) -> "DepthInfo":
+    def from_raw_and_stack(cls, raw: RawSegment, stack: Sequence[PathStep]):
         """Construct from a raw and its stack."""
         stack_hashes = tuple(hash(ps.segment) for ps in stack)
         return cls(
             stack_depth=len(stack),
             stack_hashes=stack_hashes,
             stack_hash_set=frozenset(stack_hashes),
-            stack_class_types=tuple(ps.segment.class_types for ps in stack),
+            stack_class_types=tuple(frozenset(ps.segment.class_types) for ps in stack),
             stack_positions={
-                # Reuse the hash first calculated above.
-                stack_hashes[idx]: StackPosition.from_path_step(ps)
-                for idx, ps in enumerate(stack)
+                hash(ps.segment): StackPosition.from_path_step(ps) for ps in stack
             },
         )
 
-    def common_with(self, other: "DepthInfo") -> tuple[int, ...]:
+    def common_with(self, other: "DepthInfo") -> Tuple[int, ...]:
         """Get the common depth and hashes with the other."""
         # We use set intersection because it's faster and hashes should be unique.
         common_hashes = self.stack_hash_set.intersection(other.stack_hashes)
@@ -90,7 +82,7 @@ class DepthInfo:
         common_depth = len(common_hashes)
         return self.stack_hashes[:common_depth]
 
-    def trim(self, amount: int) -> "DepthInfo":
+    def trim(self, amount: int):
         """Return a DepthInfo object with some amount trimmed."""
         if amount == 0:
             # The trivial case.
@@ -122,13 +114,16 @@ class DepthMap:
 
     """
 
-    def __init__(self, raws_with_stack: Sequence[tuple[RawSegment, list[PathStep]]]):
+    def __init__(self, raws_with_stack: Sequence[Tuple[RawSegment, List[PathStep]]]):
+        # TODO: decide whether we need the raw segments?
+        # self.raw_segments = []
         self.depth_info = {}
         for raw, stack in raws_with_stack:
+            # self.raw_segments.append(raw)
             self.depth_info[raw.uuid] = DepthInfo.from_raw_and_stack(raw, stack)
 
     @classmethod
-    def from_parent(cls: type["DepthMap"], parent: BaseSegment) -> "DepthMap":
+    def from_parent(cls: Type["DepthMap"], parent: BaseSegment) -> "DepthMap":
         """Generate a DepthMap from all the children of a segment.
 
         NOTE: This is the most efficient way to construct a DepthMap
@@ -138,7 +133,7 @@ class DepthMap:
 
     @classmethod
     def from_raws_and_root(
-        cls: type["DepthMap"],
+        cls: Type["DepthMap"],
         raw_segments: Sequence[RawSegment],
         root_segment: BaseSegment,
     ) -> "DepthMap":
@@ -167,7 +162,7 @@ class DepthMap:
 
     def copy_depth_info(
         self, anchor: RawSegment, new_segment: RawSegment, trim: int = 0
-    ) -> None:
+    ):
         """Copy the depth info for one segment and apply to another.
 
         This mutates the existing depth map. That's ok because it's

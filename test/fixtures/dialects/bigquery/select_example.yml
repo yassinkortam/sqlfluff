@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: c566ce7fefd1db31c9bf8297aa4d9c3934abbc8349d017f0db400653eb3de498
+_hash: 9a1622e165a454bcedc9eab2e974496e441c538bb14c13433e87435932355b34
 file:
   statement:
     with_compound_statement:
@@ -30,59 +30,54 @@ file:
             - comma: ','
             - select_clause_element:
                 expression:
-                  array_expression:
-                    function_name:
-                      function_name_identifier: ARRAY
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        select_statement:
-                          select_clause:
-                            keyword: SELECT
-                            select_clause_element:
-                              function:
-                                function_name:
-                                  function_name_identifier: CAST
-                                function_contents:
+                  typeless_array:
+                    keyword: ARRAY
+                    bracketed:
+                      start_bracket: (
+                      select_statement:
+                        select_clause:
+                          keyword: SELECT
+                          select_clause_element:
+                            function:
+                              function_name:
+                                function_name_identifier: CAST
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  column_reference:
+                                    naked_identifier: num
+                                keyword: AS
+                                data_type:
+                                  data_type_identifier: INT64
+                                end_bracket: )
+                        from_clause:
+                          keyword: FROM
+                          from_expression:
+                            from_expression_element:
+                              table_expression:
+                                function:
+                                  function_name:
+                                    function_name_identifier: UNNEST
                                   bracketed:
                                     start_bracket: (
                                     expression:
-                                      column_reference:
-                                        naked_identifier: num
-                                    keyword: AS
-                                    data_type:
-                                      data_type_identifier: INT64
+                                      function:
+                                        function_name:
+                                          function_name_identifier: SPLIT
+                                        bracketed:
+                                        - start_bracket: (
+                                        - expression:
+                                            column_reference:
+                                              naked_identifier: binary
+                                        - comma: ','
+                                        - expression:
+                                            quoted_literal: "''"
+                                        - end_bracket: )
                                     end_bracket: )
-                          from_clause:
-                            keyword: FROM
-                            from_expression:
-                              from_expression_element:
-                                table_expression:
-                                  function:
-                                    function_name:
-                                      function_name_identifier: UNNEST
-                                    function_contents:
-                                      bracketed:
-                                        start_bracket: (
-                                        expression:
-                                          function:
-                                            function_name:
-                                              function_name_identifier: SPLIT
-                                            function_contents:
-                                              bracketed:
-                                              - start_bracket: (
-                                              - expression:
-                                                  column_reference:
-                                                    naked_identifier: binary
-                                              - comma: ','
-                                              - expression:
-                                                  quoted_literal: "''"
-                                              - end_bracket: )
-                                        end_bracket: )
-                                alias_expression:
-                                  keyword: AS
-                                  naked_identifier: num
-                        end_bracket: )
+                              alias_expression:
+                                keyword: AS
+                                naked_identifier: num
+                      end_bracket: )
                 alias_expression:
                   keyword: AS
                   naked_identifier: bits
@@ -112,124 +107,117 @@ file:
                   function:
                     function_name:
                       function_name_identifier: bucket_id
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        expression:
-                        - column_reference:
-                            naked_identifier: count_18_24
-                        - binary_operator: '*'
-                        - column_reference:
-                            naked_identifier: bits
-                        - array_accessor:
-                            start_square_bracket: '['
-                            expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: OFFSET
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    expression:
-                                      numeric_literal: '0'
-                                    end_bracket: )
-                            end_square_bracket: ']'
-                        - binary_operator: +
-                        - column_reference:
-                            naked_identifier: count_25_34
-                        - binary_operator: '*'
-                        - column_reference:
-                            naked_identifier: bits
-                        - array_accessor:
-                            start_square_bracket: '['
-                            expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: OFFSET
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    expression:
-                                      numeric_literal: '1'
-                                    end_bracket: )
-                            end_square_bracket: ']'
-                        - binary_operator: +
-                        - column_reference:
-                            naked_identifier: count_35_44
-                        - binary_operator: '*'
-                        - column_reference:
-                            naked_identifier: bits
-                        - array_accessor:
-                            start_square_bracket: '['
-                            expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: OFFSET
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    expression:
-                                      numeric_literal: '2'
-                                    end_bracket: )
-                            end_square_bracket: ']'
-                        - binary_operator: +
-                        - column_reference:
-                            naked_identifier: count_45_54
-                        - binary_operator: '*'
-                        - column_reference:
-                            naked_identifier: bits
-                        - array_accessor:
-                            start_square_bracket: '['
-                            expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: OFFSET
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    expression:
-                                      numeric_literal: '3'
-                                    end_bracket: )
-                            end_square_bracket: ']'
-                        - binary_operator: +
-                        - column_reference:
-                            naked_identifier: count_55_64
-                        - binary_operator: '*'
-                        - column_reference:
-                            naked_identifier: bits
-                        - array_accessor:
-                            start_square_bracket: '['
-                            expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: OFFSET
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    expression:
-                                      numeric_literal: '4'
-                                    end_bracket: )
-                            end_square_bracket: ']'
-                        - binary_operator: +
-                        - column_reference:
-                            naked_identifier: count_65_plus
-                        - binary_operator: '*'
-                        - column_reference:
-                            naked_identifier: bits
-                        - array_accessor:
-                            start_square_bracket: '['
-                            expression:
-                              function:
-                                function_name:
-                                  function_name_identifier: OFFSET
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    expression:
-                                      numeric_literal: '5'
-                                    end_bracket: )
-                            end_square_bracket: ']'
-                        end_bracket: )
+                    bracketed:
+                      start_bracket: (
+                      expression:
+                      - column_reference:
+                          naked_identifier: count_18_24
+                      - binary_operator: '*'
+                      - column_reference:
+                          naked_identifier: bits
+                      - array_accessor:
+                          start_square_bracket: '['
+                          expression:
+                            function:
+                              function_name:
+                                function_name_identifier: OFFSET
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  numeric_literal: '0'
+                                end_bracket: )
+                          end_square_bracket: ']'
+                      - binary_operator: +
+                      - column_reference:
+                          naked_identifier: count_25_34
+                      - binary_operator: '*'
+                      - column_reference:
+                          naked_identifier: bits
+                      - array_accessor:
+                          start_square_bracket: '['
+                          expression:
+                            function:
+                              function_name:
+                                function_name_identifier: OFFSET
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  numeric_literal: '1'
+                                end_bracket: )
+                          end_square_bracket: ']'
+                      - binary_operator: +
+                      - column_reference:
+                          naked_identifier: count_35_44
+                      - binary_operator: '*'
+                      - column_reference:
+                          naked_identifier: bits
+                      - array_accessor:
+                          start_square_bracket: '['
+                          expression:
+                            function:
+                              function_name:
+                                function_name_identifier: OFFSET
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  numeric_literal: '2'
+                                end_bracket: )
+                          end_square_bracket: ']'
+                      - binary_operator: +
+                      - column_reference:
+                          naked_identifier: count_45_54
+                      - binary_operator: '*'
+                      - column_reference:
+                          naked_identifier: bits
+                      - array_accessor:
+                          start_square_bracket: '['
+                          expression:
+                            function:
+                              function_name:
+                                function_name_identifier: OFFSET
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  numeric_literal: '3'
+                                end_bracket: )
+                          end_square_bracket: ']'
+                      - binary_operator: +
+                      - column_reference:
+                          naked_identifier: count_55_64
+                      - binary_operator: '*'
+                      - column_reference:
+                          naked_identifier: bits
+                      - array_accessor:
+                          start_square_bracket: '['
+                          expression:
+                            function:
+                              function_name:
+                                function_name_identifier: OFFSET
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  numeric_literal: '4'
+                                end_bracket: )
+                          end_square_bracket: ']'
+                      - binary_operator: +
+                      - column_reference:
+                          naked_identifier: count_65_plus
+                      - binary_operator: '*'
+                      - column_reference:
+                          naked_identifier: bits
+                      - array_accessor:
+                          start_square_bracket: '['
+                          expression:
+                            function:
+                              function_name:
+                                function_name_identifier: OFFSET
+                              bracketed:
+                                start_bracket: (
+                                expression:
+                                  numeric_literal: '5'
+                                end_bracket: )
+                          end_square_bracket: ']'
+                      end_bracket: )
                   binary_operator: /
                   column_reference:
                     naked_identifier: audience_size

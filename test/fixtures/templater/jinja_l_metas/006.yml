@@ -15,9 +15,8 @@ file:
             - binary_operator: +
             - whitespace: ' '
             - numeric_literal: '1'
-          dedent: ""
-  - placeholder: "\n"
+        dedent: ""
   - dedent: ""
-  - placeholder: "{%- endif %}"
+  - placeholder: "\n{%- endif %}"
   - newline: "\n"
   - end_of_file: ""

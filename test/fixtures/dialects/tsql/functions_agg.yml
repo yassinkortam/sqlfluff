@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: c1c6f7a9c3531b04f9555421c97077ccc02511eeaa58d93eaba58cecb880c72a
+_hash: cd8f3e10bf068f2f584490bf849aea4d78e236541141370781db6c530c204886
 file:
   batch:
   - statement:
@@ -14,18 +14,17 @@ file:
             function:
               function_name:
                 keyword: string_agg
-              function_contents:
-                bracketed:
-                - start_bracket: (
-                - expression:
-                    column_reference:
-                    - naked_identifier: t
-                    - dot: .
-                    - naked_identifier: v
-                - comma: ','
-                - expression:
-                    quoted_literal: "'; '"
-                - end_bracket: )
+              bracketed:
+              - start_bracket: (
+              - expression:
+                  column_reference:
+                  - naked_identifier: t
+                  - dot: .
+                  - naked_identifier: v
+              - comma: ','
+              - expression:
+                  quoted_literal: "'; '"
+              - end_bracket: )
               within_group_clause:
               - keyword: within
               - keyword: group
@@ -45,12 +44,11 @@ file:
             function:
               function_name:
                 keyword: PERCENTILE_CONT
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    numeric_literal: '0.5'
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  numeric_literal: '0.5'
+                end_bracket: )
               within_group_clause:
               - keyword: WITHIN
               - keyword: GROUP
@@ -81,12 +79,11 @@ file:
             function:
               function_name:
                 keyword: PERCENTILE_DISC
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    numeric_literal: '0.5'
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  numeric_literal: '0.5'
+                end_bracket: )
               within_group_clause:
               - keyword: WITHIN
               - keyword: GROUP
@@ -132,26 +129,24 @@ file:
           - function:
               function_name:
                 function_name_identifier: MIN
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    column_reference:
-                      quoted_identifier: '[ArrivalDt]'
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    quoted_identifier: '[ArrivalDt]'
+                end_bracket: )
           - comparison_operator:
             - raw_comparison_operator: <
             - raw_comparison_operator: '='
           - function:
               function_name:
                 function_name_identifier: MAX
-              function_contents:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    column_reference:
-                      quoted_identifier: '[DischargeDt]'
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    quoted_identifier: '[DischargeDt]'
+                end_bracket: )
   - statement:
       drop_table_statement:
       - keyword: DROP

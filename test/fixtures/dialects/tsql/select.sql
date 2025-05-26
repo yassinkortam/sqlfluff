@@ -57,7 +57,6 @@ SELECT
 	NUMERIC_ROUNDABORT ,
 	PARSEONLY ,
 	PRECISION ,
-	PROPERTY ,
 	QUERY_GOVERNOR_COST_LIMIT ,
 	QUOTED_IDENTIFIER ,
 	REMOTE_PROC_TRANSACTIONS ,
@@ -99,23 +98,8 @@ SELECT
 	[following]	= count(*) over(order by object_id ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING),
 
     EqualsAlias = ColumnName,
-    OtherColumnName AS AsAlias,
-	cast(1 as character varying(1)),
-	cast([central] as int),
-
-    --unbracketed functions
-    CURRENT_TIMESTAMP,
-    CURRENT_USER,
-    SESSION_USER,
-    SYSTEM_USER,
-	test(default, 2)
+    OtherColumnName AS AsAlias
 
 
-FROM dbo . all_pop;
+FROM dbo . all_pop
 
-SELECT DISTINCT TOP 5 some_value FROM some_table;
-
-select
-    'Tabellen' as Objekt,
-    Count(*) as Anzahl
-from dbo.sql_modules;

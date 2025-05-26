@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: fd6849e0a10506d050bb85d718abe342abd04471b4361f262f35c0919836f19b
+_hash: 8e1c3bbca74a1db024b87f5c5657fb94c22cdc895cd6716d8708f832a3c4e768
 file:
 - statement:
     create_table_statement:
@@ -24,27 +24,25 @@ file:
             data_type_identifier: String
       - end_bracket: )
     - engine:
-        keyword: engine
-        comparison_operator:
+      - keyword: engine
+      - comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
-          function_contents:
-            bracketed:
-              start_bracket: (
-              end_bracket: )
-        merge_tree_order_by_clause:
-        - keyword: order
-        - keyword: by
-        - bracketed:
-          - start_bracket: (
-          - column_reference:
-              naked_identifier: a
-          - comma: ','
-          - column_reference:
-              naked_identifier: b
-          - end_bracket: )
+          bracketed:
+            start_bracket: (
+            end_bracket: )
+      - keyword: order
+      - keyword: by
+      - bracketed:
+        - start_bracket: (
+        - column_reference:
+            naked_identifier: a
+        - comma: ','
+        - column_reference:
+            naked_identifier: b
+        - end_bracket: )
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -73,43 +71,39 @@ file:
       - keyword: ENGINE
       - comparison_operator:
           raw_comparison_operator: '='
-      - table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
-          function_contents:
-            bracketed:
-              start_bracket: (
-              end_bracket: )
-      - merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - bracketed:
-          - start_bracket: (
-          - column_reference:
-              naked_identifier: CounterID
-          - comma: ','
-          - column_reference:
-              naked_identifier: EventDate
-          - end_bracket: )
+          bracketed:
+            start_bracket: (
+            end_bracket: )
+      - keyword: ORDER
+      - keyword: BY
+      - bracketed:
+        - start_bracket: (
+        - column_reference:
+            naked_identifier: CounterID
+        - comma: ','
+        - column_reference:
+            naked_identifier: EventDate
+        - end_bracket: )
       - keyword: PARTITION
       - keyword: BY
       - expression:
           function:
             function_name:
               function_name_identifier: toYYYYMM
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: EventDate
-                end_bracket: )
-      - settings_clause:
-          keyword: SETTINGS
-          naked_identifier: index_granularity
-          comparison_operator:
-            raw_comparison_operator: '='
-          numeric_literal: '8192'
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: EventDate
+              end_bracket: )
+      - keyword: SETTINGS
+      - naked_identifier: index_granularity
+      - comparison_operator:
+          raw_comparison_operator: '='
+      - numeric_literal: '8192'
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -143,29 +137,28 @@ file:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: MergeTree
-          function_contents:
-            bracketed:
-            - start_bracket: (
-            - expression:
-                column_reference:
-                  naked_identifier: date
-            - comma: ','
-            - expression:
-                bracketed:
-                - start_bracket: (
-                - column_reference:
-                    naked_identifier: UserId
-                - comma: ','
-                - column_reference:
-                    naked_identifier: EventType
-                - end_bracket: )
-            - comma: ','
-            - expression:
-                numeric_literal: '8192'
-            - end_bracket: )
+          bracketed:
+          - start_bracket: (
+          - expression:
+              column_reference:
+                naked_identifier: date
+          - comma: ','
+          - expression:
+              bracketed:
+              - start_bracket: (
+              - column_reference:
+                  naked_identifier: UserId
+              - comma: ','
+              - column_reference:
+                  naked_identifier: EventType
+              - end_bracket: )
+          - comma: ','
+          - expression:
+              numeric_literal: '8192'
+          - end_bracket: )
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -199,7 +192,7 @@ file:
       - keyword: ENGINE
       - comparison_operator:
           raw_comparison_operator: '='
-      - table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
       - keyword: PARTITION
@@ -207,23 +200,21 @@ file:
       - expression:
           column_reference:
             naked_identifier: date
-      - merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - bracketed:
-          - start_bracket: (
-          - column_reference:
-              naked_identifier: UserId
-          - comma: ','
-          - column_reference:
-              naked_identifier: EventType
-          - end_bracket: )
-      - settings_clause:
-          keyword: SETTINGS
-          naked_identifier: index_granularity
-          comparison_operator:
-            raw_comparison_operator: '='
-          numeric_literal: '8192'
+      - keyword: ORDER
+      - keyword: BY
+      - bracketed:
+        - start_bracket: (
+        - column_reference:
+            naked_identifier: UserId
+        - comma: ','
+        - column_reference:
+            naked_identifier: EventType
+        - end_bracket: )
+      - keyword: SETTINGS
+      - naked_identifier: index_granularity
+      - comparison_operator:
+          raw_comparison_operator: '='
+      - numeric_literal: '8192'
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -238,56 +229,22 @@ file:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: Merge
-          function_contents:
-            bracketed:
-            - start_bracket: (
-            - expression:
-                function:
-                  function_name:
-                    function_name_identifier: currentDatabase
-                  function_contents:
-                    bracketed:
-                      start_bracket: (
-                      end_bracket: )
-            - comma: ','
-            - expression:
-                quoted_literal: "'^WatchLog'"
-            - end_bracket: )
-- statement_terminator: ;
-- statement:
-    create_table_statement:
-    - keyword: CREATE
-    - keyword: TABLE
-    - table_reference:
-        naked_identifier: _2
-    - keyword: as
-    - table_reference:
-        naked_identifier: _1
-    - engine:
-        keyword: ENGINE
-        comparison_operator:
-          raw_comparison_operator: '='
-        table_engine_function:
-          function_name:
-            function_name_identifier: Merge
-          function_contents:
-            bracketed:
-            - start_bracket: (
-            - expression:
-                function:
-                  function_name:
-                    function_name_identifier: currentDatabase
-                  function_contents:
-                    bracketed:
-                      start_bracket: (
-                      end_bracket: )
-            - comma: ','
-            - expression:
-                quoted_literal: "'^WatchLog'"
-            - end_bracket: )
+          bracketed:
+          - start_bracket: (
+          - expression:
+              function:
+                function_name:
+                  function_name_identifier: currentDatabase
+                bracketed:
+                  start_bracket: (
+                  end_bracket: )
+          - comma: ','
+          - expression:
+              quoted_literal: "'^WatchLog'"
+          - end_bracket: )
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -299,38 +256,36 @@ file:
     - table_reference:
         naked_identifier: hits
     - engine:
-        keyword: ENGINE
-        comparison_operator:
+      - keyword: ENGINE
+      - comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: Distributed
-          function_contents:
-            bracketed:
-            - start_bracket: (
-            - expression:
-                column_reference:
-                  naked_identifier: logs
-            - comma: ','
-            - expression:
-                column_reference:
-                  naked_identifier: default
-            - comma: ','
-            - expression:
-                column_reference:
-                  naked_identifier: hits
-            - end_bracket: )
-        settings_clause:
-        - keyword: SETTINGS
-        - naked_identifier: fsync_after_insert
-        - comparison_operator:
-            raw_comparison_operator: '='
-        - numeric_literal: '0'
-        - comma: ','
-        - naked_identifier: fsync_directories
-        - comparison_operator:
-            raw_comparison_operator: '='
-        - numeric_literal: '0'
+          bracketed:
+          - start_bracket: (
+          - expression:
+              column_reference:
+                naked_identifier: logs
+          - comma: ','
+          - expression:
+              column_reference:
+                naked_identifier: default
+          - comma: ','
+          - expression:
+              column_reference:
+                naked_identifier: hits
+          - end_bracket: )
+      - keyword: SETTINGS
+      - naked_identifier: fsync_after_insert
+      - comparison_operator:
+          raw_comparison_operator: '='
+      - numeric_literal: '0'
+      - comma: ','
+      - naked_identifier: fsync_directories
+      - comparison_operator:
+          raw_comparison_operator: '='
+      - numeric_literal: '0'
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -347,10 +302,9 @@ file:
     - function:
         function_name:
           function_name_identifier: table_function
-        function_contents:
-          bracketed:
-            start_bracket: (
-            end_bracket: )
+        bracketed:
+          start_bracket: (
+          end_bracket: )
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -369,7 +323,7 @@ file:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: Memory
     - keyword: AS
@@ -386,38 +340,48 @@ file:
     - table_reference:
         naked_identifier: codec_example
     - bracketed:
-      - start_bracket: (
-      - column_definition:
+        start_bracket: (
+        column_definition:
           naked_identifier: timestamp
           data_type:
             data_type_identifier: DateTime
-          keyword: CODEC
-          bracketed:
-            start_bracket: (
-            naked_identifier: DoubleDelta
-            end_bracket: )
-      - comma: ','
-      - column_definition:
-          naked_identifier: slow_values
-          data_type:
-            data_type_identifier: Float32
-          keyword: CODEC
-          bracketed:
-            start_bracket: (
-            naked_identifier: Gorilla
-            end_bracket: )
-      - end_bracket: )
+          column_constraint_segment:
+          - keyword: CODEC
+          - expression:
+              bracketed:
+                start_bracket: (
+                expression:
+                  column_reference:
+                    naked_identifier: DoubleDelta
+                end_bracket: )
+          - comma: ','
+          - expression:
+              column_reference:
+                naked_identifier: slow_values
+          - expression:
+              column_reference:
+                naked_identifier: Float32
+          - expression:
+              function:
+                function_name:
+                  function_name_identifier: CODEC
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    column_reference:
+                      naked_identifier: Gorilla
+                  end_bracket: )
+        end_bracket: )
     - engine:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: MergeTree
-          function_contents:
-            bracketed:
-              start_bracket: (
-              end_bracket: )
+          bracketed:
+            start_bracket: (
+            end_bracket: )
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -431,28 +395,32 @@ file:
           naked_identifier: x
           data_type:
             data_type_identifier: String
-          keyword: Codec
-          bracketed:
-          - start_bracket: (
-          - naked_identifier: Delta
-          - comma: ','
-          - naked_identifier: LZ4
-          - comma: ','
-          - naked_identifier: AES_128_GCM_SIV
-          - end_bracket: )
+          column_constraint_segment:
+            keyword: Codec
+            expression:
+              bracketed:
+              - start_bracket: (
+              - column_reference:
+                  naked_identifier: Delta
+              - comma: ','
+              - column_reference:
+                  naked_identifier: LZ4
+              - comma: ','
+              - column_reference:
+                  naked_identifier: AES_128_GCM_SIV
+              - end_bracket: )
         end_bracket: )
     - engine:
-        keyword: ENGINE
-        comparison_operator:
+      - keyword: ENGINE
+      - comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
-        merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - column_reference:
-            naked_identifier: x
+      - keyword: ORDER
+      - keyword: BY
+      - column_reference:
+          naked_identifier: x
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -477,17 +445,16 @@ file:
             data_type_identifier: String
       - end_bracket: )
     - engine:
-        keyword: ENGINE
-        comparison_operator:
+      - keyword: ENGINE
+      - comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
-        merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - column_reference:
-            naked_identifier: n
+      - keyword: ORDER
+      - keyword: BY
+      - column_reference:
+          naked_identifier: n
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -512,22 +479,22 @@ file:
             data_type_identifier: Nullable
             bracketed:
               start_bracket: (
-              data_type:
-                data_type_identifier: String
+              expression:
+                column_reference:
+                  naked_identifier: String
               end_bracket: )
       - end_bracket: )
     - engine:
-        keyword: ENGINE
-        comparison_operator:
+      - keyword: ENGINE
+      - comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
-        merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - column_reference:
-            naked_identifier: n
+      - keyword: ORDER
+      - keyword: BY
+      - column_reference:
+          naked_identifier: n
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -546,7 +513,7 @@ file:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: Memory
     - keyword: COMMENT
@@ -561,10 +528,10 @@ file:
     - keyword: EXISTS
     - table_reference:
         naked_identifier: all_hits
-    - on_cluster_clause:
-      - keyword: 'ON'
-      - keyword: CLUSTER
-      - naked_identifier: cluster
+    - keyword: 'ON'
+    - keyword: CLUSTER
+    - cluster_reference:
+        naked_identifier: cluster
     - bracketed:
       - start_bracket: (
       - column_definition:
@@ -581,24 +548,23 @@ file:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: Distributed
-          function_contents:
-            bracketed:
-            - start_bracket: (
-            - expression:
-                column_reference:
-                  naked_identifier: cluster
-            - comma: ','
-            - expression:
-                column_reference:
-                  naked_identifier: default
-            - comma: ','
-            - expression:
-                column_reference:
-                  naked_identifier: hits
-            - end_bracket: )
+          bracketed:
+          - start_bracket: (
+          - expression:
+              column_reference:
+                naked_identifier: cluster
+          - comma: ','
+          - expression:
+              column_reference:
+                naked_identifier: default
+          - comma: ','
+          - expression:
+              column_reference:
+                naked_identifier: hits
+          - end_bracket: )
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -633,7 +599,7 @@ file:
         keyword: ENGINE
         comparison_operator:
           raw_comparison_operator: '='
-        table_engine_function:
+        engine_function:
           function_name:
             function_name_identifier: engine
 - statement_terminator: ;
@@ -691,7 +657,7 @@ file:
       - keyword: ENGINE
       - comparison_operator:
           raw_comparison_operator: '='
-      - table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
       - keyword: PARTITION
@@ -700,18 +666,16 @@ file:
           function:
             function_name:
               function_name_identifier: toYYYYMM
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: d
-                end_bracket: )
-      - merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - column_reference:
-            naked_identifier: d
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: d
+              end_bracket: )
+      - keyword: ORDER
+      - keyword: BY
+      - column_reference:
+          naked_identifier: d
 - statement_terminator: ;
 - statement:
     create_table_statement:
@@ -735,7 +699,7 @@ file:
       - keyword: ENGINE
       - comparison_operator:
           raw_comparison_operator: '='
-      - table_engine_function:
+      - engine_function:
           function_name:
             function_name_identifier: MergeTree
       - keyword: PARTITION
@@ -744,18 +708,16 @@ file:
           function:
             function_name:
               function_name_identifier: toYYYYMM
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  column_reference:
-                    naked_identifier: d
-                end_bracket: )
-      - merge_tree_order_by_clause:
-        - keyword: ORDER
-        - keyword: BY
-        - column_reference:
-            naked_identifier: d
+            bracketed:
+              start_bracket: (
+              expression:
+                column_reference:
+                  naked_identifier: d
+              end_bracket: )
+      - keyword: ORDER
+      - keyword: BY
+      - column_reference:
+          naked_identifier: d
     - table_ttl_segment:
       - keyword: TTL
       - expression:

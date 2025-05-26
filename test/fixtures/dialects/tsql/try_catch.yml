@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: f251ac42d27a4da57acc5b85cdd9c10fbc39eabf7f3403de99f67823fcfc7653
+_hash: 447bb3cd044ffe26c65e01f60557358411e66ad25287f132fca88e45957cc33c
 file:
 - batch:
     statement:
@@ -38,10 +38,9 @@ file:
                 function:
                   function_name:
                     function_name_identifier: ERROR_NUMBER
-                  function_contents:
-                    bracketed:
-                      start_bracket: (
-                      end_bracket: )
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
                 alias_expression:
                   keyword: AS
                   naked_identifier: ErrorNumber
@@ -50,10 +49,9 @@ file:
                 function:
                   function_name:
                     function_name_identifier: ERROR_MESSAGE
-                  function_contents:
-                    bracketed:
-                      start_bracket: (
-                      end_bracket: )
+                  bracketed:
+                    start_bracket: (
+                    end_bracket: )
                 alias_expression:
                   keyword: AS
                   naked_identifier: ErrorMessage
@@ -66,7 +64,7 @@ file:
 - go_statement:
     keyword: GO
 - batch:
-  - statement:
+    statement:
       throw_statement:
       - keyword: THROW
       - numeric_literal: '50005'
@@ -74,20 +72,4 @@ file:
       - quoted_literal: "N'an error occurred'"
       - comma: ','
       - numeric_literal: '1'
-  - statement_terminator: ;
-  - statement:
-      try_catch:
-      - keyword: BEGIN
-      - keyword: TRY
-      - statement:
-          execute_script_statement:
-            keyword: EXEC
-            object_reference:
-              naked_identifier: spSomeProc
-      - keyword: END
-      - keyword: TRY
-      - keyword: BEGIN
-      - keyword: CATCH
-      - keyword: END
-      - keyword: CATCH
-  - statement_terminator: ;
+    statement_terminator: ;

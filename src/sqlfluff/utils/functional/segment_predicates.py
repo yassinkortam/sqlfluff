@@ -8,19 +8,22 @@ This is not necessarily a complete set of predicates covering all possible
 requirements. Rule authors can define their own predicates as needed, either
 as regular functions, `lambda`, etc.
 """
-
 from typing import Callable, Optional
 
 from sqlfluff.core.parser import BaseSegment
-from sqlfluff.core.templaters.base import TemplatedFile
 from sqlfluff.utils.functional.raw_file_slices import RawFileSlices
 from sqlfluff.utils.functional.templated_file_slices import TemplatedFileSlices
+from sqlfluff.core.templaters.base import (
+    RawFileSlice,
+    TemplatedFile,
+    TemplatedFileSlice,
+)
 
 
 def raw_is(*raws: str) -> Callable[[BaseSegment], bool]:  # pragma: no cover
     """Returns a function that determines if segment matches one of the raw inputs."""
 
-    def _(segment: BaseSegment) -> bool:
+    def _(segment: BaseSegment):
         return segment.raw in raws
 
     return _
@@ -29,7 +32,7 @@ def raw_is(*raws: str) -> Callable[[BaseSegment], bool]:  # pragma: no cover
 def raw_upper_is(*raws: str) -> Callable[[BaseSegment], bool]:
     """Returns a function that determines if segment matches one of the raw inputs."""
 
-    def _(segment: BaseSegment) -> bool:
+    def _(segment: BaseSegment):
         return segment.raw_upper in raws
 
     return _
@@ -38,13 +41,13 @@ def raw_upper_is(*raws: str) -> Callable[[BaseSegment], bool]:
 def is_type(*seg_type: str) -> Callable[[BaseSegment], bool]:
     """Returns a function that determines if segment is one of the types."""
 
-    def _(segment: BaseSegment) -> bool:
+    def _(segment: BaseSegment):
         return segment.is_type(*seg_type)
 
     return _
 
 
-def is_keyword(*keyword_name: str) -> Callable[[BaseSegment], bool]:
+def is_keyword(*keyword_name) -> Callable[[BaseSegment], bool]:
     """Returns a function that determines if it's a matching keyword."""
     return and_(
         is_type("keyword"), raw_upper_is(*[raw.upper() for raw in keyword_name])
@@ -65,6 +68,15 @@ def is_comment() -> Callable[[BaseSegment], bool]:
 
     def _(segment: BaseSegment) -> bool:
         return segment.is_comment
+
+    return _
+
+
+def is_expandable() -> Callable[[BaseSegment], bool]:
+    """Returns a function that checks if segment is expandable."""
+
+    def _(segment: BaseSegment) -> bool:
+        return segment.is_expandable
 
     return _
 
@@ -117,7 +129,7 @@ def get_type() -> Callable[[BaseSegment], str]:
 def and_(*functions: Callable[[BaseSegment], bool]) -> Callable[[BaseSegment], bool]:
     """Returns a function that computes the functions and-ed together."""
 
-    def _(segment: BaseSegment) -> bool:
+    def _(segment: BaseSegment):
         return all(function(segment) for function in functions)
 
     return _
@@ -126,7 +138,7 @@ def and_(*functions: Callable[[BaseSegment], bool]) -> Callable[[BaseSegment], b
 def or_(*functions: Callable[[BaseSegment], bool]) -> Callable[[BaseSegment], bool]:
     """Returns a function that computes the functions or-ed together."""
 
-    def _(segment: BaseSegment) -> bool:
+    def _(segment: BaseSegment):
         return any(function(segment) for function in functions)
 
     return _
@@ -135,7 +147,7 @@ def or_(*functions: Callable[[BaseSegment], bool]) -> Callable[[BaseSegment], bo
 def not_(fn: Callable[[BaseSegment], bool]) -> Callable[[BaseSegment], bool]:
     """Returns a function that computes: not fn()."""
 
-    def _(segment: BaseSegment) -> bool:
+    def _(segment: BaseSegment):
         return not fn(segment)
 
     return _
@@ -158,7 +170,7 @@ def raw_slices(
         *templated_file.raw_slices_spanning_source_slice(
             segment.pos_marker.source_slice
         ),
-        templated_file=templated_file,
+        templated_file=templated_file
     )
 
 
@@ -177,13 +189,33 @@ def templated_slices(
         )  # pragma: no cover
     # :TRICKY: We don't use _find_slice_indices_of_templated_pos() here because
     # it treats TemplatedFileSlice.templated_slice.stop as inclusive, not
-    # exclusive. Other parts of SQLFluff rely on this behaviour, but we don't
+    # exclusive. Other parts of SQLFluff rely on this behavior, but we don't
     # want it. It's easy enough to do this ourselves.
     start = segment.pos_marker.templated_slice.start
     stop = segment.pos_marker.templated_slice.stop
+    slice_: TemplatedFileSlice
     templated_slices = [
         slice_
         for slice_ in templated_file.sliced_file
         if (stop > slice_.templated_slice.start and start < slice_.templated_slice.stop)
     ]
     return TemplatedFileSlices(*templated_slices, templated_file=templated_file)
+
+
+def raw_slice(segment: BaseSegment, raw_slice_: RawFileSlice) -> str:
+    """Return the portion of a segment's source provided by raw_slice."""
+    result = ""
+    if not segment.pos_marker:
+        raise ValueError(
+            'raw_slice: "segment" parameter must have pos_marker set.'
+        )  # pragma: no cover
+    seg_start = segment.pos_marker.source_slice.start
+    seg_stop = segment.pos_marker.source_slice.stop
+    if seg_start != seg_stop:
+        start = max(seg_start, raw_slice_.source_idx)
+        stop = min(
+            seg_stop,
+            raw_slice_.source_idx + len(raw_slice_.raw),
+        )
+        result = segment.pos_marker.templated_file.source_str[slice(start, stop)]
+    return result

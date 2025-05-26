@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: a204b9c459511a89cc2f1f77d9c46071a44272116c1e1e9f8287692bd96688ed
+_hash: 48d6ad263b98eb579ae3258051c919f0eb8ec033ed634046f8e2d90dbb63b198
 file:
 - statement:
     select_statement:
@@ -11,9 +11,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: FLOAT
@@ -31,9 +31,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: FLOAT
@@ -51,9 +51,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: FLOAT
@@ -71,9 +71,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: FLOAT
@@ -91,9 +91,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 keyword: time
@@ -111,9 +111,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: text
@@ -131,17 +131,17 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: VARCHAR
-                bracketed_arguments:
-                  bracketed:
-                    start_bracket: (
+                bracketed:
+                  start_bracket: (
+                  expression:
                     numeric_literal: '512'
-                    end_bracket: )
+                  end_bracket: )
       from_clause:
         keyword: FROM
         from_expression:
@@ -156,9 +156,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
                 data_type_identifier: TIMESTAMPTZ
@@ -176,9 +176,9 @@ file:
         keyword: SELECT
         select_clause_element:
           expression:
+            column_reference:
+              naked_identifier: amount_of_honey
             cast_expression:
-              column_reference:
-                naked_identifier: amount_of_honey
               casting_operator: '::'
               data_type:
               - keyword: TIMESTAMP
@@ -223,34 +223,34 @@ file:
           - join_on_condition:
               keyword: 'ON'
               expression:
+              - column_reference:
+                - naked_identifier: fc
+                - dot: .
+                - naked_identifier: bear_id
               - cast_expression:
-                  column_reference:
-                  - naked_identifier: fc
-                  - dot: .
-                  - naked_identifier: bear_id
                   casting_operator: '::'
                   data_type:
                     data_type_identifier: VARCHAR
-                    bracketed_arguments:
-                      bracketed:
-                        start_bracket: (
+                    bracketed:
+                      start_bracket: (
+                      expression:
                         numeric_literal: '512'
-                        end_bracket: )
+                      end_bracket: )
               - comparison_operator:
                   raw_comparison_operator: '='
+              - column_reference:
+                - naked_identifier: bi
+                - dot: .
+                - naked_identifier: bear_id
               - cast_expression:
-                  column_reference:
-                  - naked_identifier: bi
-                  - dot: .
-                  - naked_identifier: bear_id
                   casting_operator: '::'
                   data_type:
                     data_type_identifier: VARCHAR
-                    bracketed_arguments:
-                      bracketed:
-                        start_bracket: (
+                    bracketed:
+                      start_bracket: (
+                      expression:
                         numeric_literal: '512'
-                        end_bracket: )
+                      end_bracket: )
       where_clause:
         keyword: WHERE
         expression:

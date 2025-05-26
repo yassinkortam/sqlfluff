@@ -1,1 +1,1 @@
-"""Tests for sqlfluff.core.parser."""
+"""Tests for sqlfluff.parser."""
