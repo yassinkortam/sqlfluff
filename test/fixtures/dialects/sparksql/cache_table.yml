@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 95f34ac1be5768ab605eec92c82499535d67bf28559d8e9462549b9eef6bfd85
+_hash: 01406cca80cb6ce1bdf4b067df84c931120f02ceef41f19804bc12220f07b16b
 file:
 - statement:
     cache_table:
@@ -121,11 +121,4 @@ file:
               table_expression:
                 table_reference:
                   naked_identifier: TESTDATA
-- statement_terminator: ;
-- statement:
-    cache_table:
-    - keyword: CACHE
-    - keyword: TABLE
-    - table_reference:
-        naked_identifier: TESTCACHE
 - statement_terminator: ;

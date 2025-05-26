@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 1363aed6e5fc8f7eba009cd74019c0d04670e6cd387fbeecd3c55cac0f350538
+_hash: 223d772b3217880363965fe815cb6fb2c44fc4bc1c3fcc3c5d2c8b2c5af2313e
 file:
 - batch:
     statement:
@@ -114,10 +114,9 @@ file:
                     function:
                       function_name:
                         function_name_identifier: ROWCOUNT_BIG
-                      function_contents:
-                        bracketed:
-                          start_bracket: (
-                          end_bracket: )
+                      bracketed:
+                        start_bracket: (
+                        end_bracket: )
                     comparison_operator:
                       raw_comparison_operator: '='
                     numeric_literal: '0'
@@ -346,10 +345,9 @@ file:
       - keyword: ALL
       - keyword: SERVER
       - keyword: WITH
-      - execute_as_clause:
-        - keyword: EXECUTE
-        - keyword: AS
-        - quoted_identifier: "'login_test'"
+      - keyword: EXECUTE
+      - keyword: AS
+      - quoted_identifier: "'login_test'"
       - keyword: FOR
       - naked_identifier: LOGON
       - keyword: AS
@@ -364,10 +362,9 @@ file:
                   - function:
                       function_name:
                         function_name_identifier: ORIGINAL_LOGIN
-                      function_contents:
-                        bracketed:
-                          start_bracket: (
-                          end_bracket: )
+                      bracketed:
+                        start_bracket: (
+                        end_bracket: )
                   - comparison_operator:
                       raw_comparison_operator: '='
                   - quoted_literal: "'login_test'"
@@ -382,11 +379,10 @@ file:
                               function:
                                 function_name:
                                   function_name_identifier: COUNT
-                                function_contents:
-                                  bracketed:
-                                    start_bracket: (
-                                    star: '*'
-                                    end_bracket: )
+                                bracketed:
+                                  start_bracket: (
+                                  star: '*'
+                                  end_bracket: )
                           from_clause:
                             keyword: FROM
                             from_expression:
@@ -457,10 +453,9 @@ file:
                   function:
                     function_name:
                       function_name_identifier: Getdate
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
+                    bracketed:
+                      start_bracket: (
+                      end_bracket: )
             from_clause:
               keyword: FROM
               from_expression:
@@ -547,10 +542,9 @@ file:
                   function:
                     function_name:
                       function_name_identifier: sysdatetime
-                    function_contents:
-                      bracketed:
-                        start_bracket: (
-                        end_bracket: )
+                    bracketed:
+                      start_bracket: (
+                      end_bracket: )
             from_clause:
               keyword: FROM
               from_expression:
@@ -634,101 +628,5 @@ file:
       - keyword: 'ON'
       - keyword: DATABASE
     statement_terminator: ;
-- go_statement:
-    keyword: GO
-- batch:
-    statement:
-      create_trigger:
-      - keyword: CREATE
-      - keyword: OR
-      - keyword: ALTER
-      - keyword: TRIGGER
-      - trigger_reference:
-          naked_identifier: reminder1
-      - keyword: 'ON'
-      - table_reference:
-        - naked_identifier: Sales
-        - dot: .
-        - naked_identifier: Customer
-      - keyword: AFTER
-      - keyword: INSERT
-      - comma: ','
-      - keyword: UPDATE
-      - keyword: AS
-      - statement:
-          raiserror_statement:
-            keyword: RAISERROR
-            bracketed:
-            - start_bracket: (
-            - quoted_literal: "'Notify Customer Relations'"
-            - comma: ','
-            - numeric_literal: '16'
-            - comma: ','
-            - numeric_literal: '10'
-            - end_bracket: )
-      - statement_terminator: ;
-- go_statement:
-    keyword: GO
-- batch:
-    statement:
-      create_trigger:
-      - keyword: CREATE
-      - keyword: TRIGGER
-      - trigger_reference:
-          naked_identifier: reminder
-      - keyword: 'ON'
-      - table_reference:
-        - naked_identifier: person
-        - dot: .
-        - naked_identifier: address
-      - keyword: AFTER
-      - keyword: UPDATE
-      - keyword: AS
-      - statement:
-          if_then_statement:
-            if_clause:
-              keyword: IF
-              expression:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                  - function:
-                      function_name:
-                        function_name_identifier: UPDATE
-                      function_contents:
-                        bracketed:
-                          start_bracket: (
-                          expression:
-                            column_reference:
-                              naked_identifier: stateprovinceid
-                          end_bracket: )
-                  - binary_operator: OR
-                  - function:
-                      function_name:
-                        function_name_identifier: UPDATE
-                      function_contents:
-                        bracketed:
-                          start_bracket: (
-                          expression:
-                            column_reference:
-                              naked_identifier: postalcode
-                          end_bracket: )
-                  end_bracket: )
-            statement:
-              begin_end_block:
-              - keyword: BEGIN
-              - statement:
-                  raiserror_statement:
-                    keyword: RAISERROR
-                    bracketed:
-                    - start_bracket: (
-                    - numeric_literal: '50009'
-                    - comma: ','
-                    - numeric_literal: '16'
-                    - comma: ','
-                    - numeric_literal: '10'
-                    - end_bracket: )
-              - keyword: END
-            statement_terminator: ;
 - go_statement:
     keyword: GO

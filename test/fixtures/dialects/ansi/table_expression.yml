@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 634b8db2bc7e14d44069d5f50fddcda33d01a39e638ba98f137212423676128d
+_hash: cef3c0ce8f899b9aaf73447c99616ef7b20cee593d5599461084a48820e0b34a
 file:
 - statement:
     select_statement:
@@ -23,23 +23,21 @@ file:
               function:
                 function_name:
                   function_name_identifier: UNNEST
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      function:
-                        function_name:
-                          function_name_identifier: GENERATE_ARRAY
-                        function_contents:
-                          bracketed:
-                          - start_bracket: (
-                          - expression:
-                              numeric_literal: '1'
-                          - comma: ','
-                          - expression:
-                              numeric_literal: '53'
-                          - end_bracket: )
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    function:
+                      function_name:
+                        function_name_identifier: GENERATE_ARRAY
+                      bracketed:
+                      - start_bracket: (
+                      - expression:
+                          numeric_literal: '1'
+                      - comma: ','
+                      - expression:
+                          numeric_literal: '53'
+                      - end_bracket: )
+                  end_bracket: )
             alias_expression:
               keyword: AS
               naked_identifier: y
@@ -63,19 +61,18 @@ file:
               function:
                 function_name:
                   function_name_identifier: UNNEST
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      array_literal:
-                      - start_square_bracket: '['
-                      - numeric_literal: '1'
-                      - comma: ','
-                      - numeric_literal: '2'
-                      - comma: ','
-                      - numeric_literal: '3'
-                      - end_square_bracket: ']'
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    array_literal:
+                    - start_square_bracket: '['
+                    - numeric_literal: '1'
+                    - comma: ','
+                    - numeric_literal: '2'
+                    - comma: ','
+                    - numeric_literal: '3'
+                    - end_square_bracket: ']'
+                  end_bracket: )
           - alias_expression:
               naked_identifier: id
           - keyword: WITH
@@ -89,19 +86,18 @@ file:
               function:
                 function_name:
                   function_name_identifier: UNNEST
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      array_literal:
-                      - start_square_bracket: '['
-                      - quoted_literal: "'a'"
-                      - comma: ','
-                      - quoted_literal: "'b'"
-                      - comma: ','
-                      - quoted_literal: "'c'"
-                      - end_square_bracket: ']'
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    array_literal:
+                    - start_square_bracket: '['
+                    - quoted_literal: "'a'"
+                    - comma: ','
+                    - quoted_literal: "'b'"
+                    - comma: ','
+                    - quoted_literal: "'c'"
+                    - end_square_bracket: ']'
+                  end_bracket: )
           - alias_expression:
               naked_identifier: name
           - keyword: WITH

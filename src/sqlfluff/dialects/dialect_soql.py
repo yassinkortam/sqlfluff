@@ -3,48 +3,13 @@
 https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql.htm
 """
 
-from sqlfluff.core.dialects import load_raw_dialect
-from sqlfluff.core.parser import (
-    BaseSegment,
-    CodeSegment,
-    LiteralSegment,
-    OneOf,
-    Ref,
-    RegexLexer,
-    Sequence,
-    TypedParser,
-)
 from sqlfluff.dialects import dialect_ansi as ansi
+from sqlfluff.core.parser import BaseSegment, OneOf, Ref, Sequence
+from sqlfluff.core.dialects import load_raw_dialect
 
 ansi_dialect = load_raw_dialect("ansi")
 
-soql_dialect = ansi_dialect.copy_as(
-    "soql",
-    formatted_name="Salesforce Object Query Language (SOQL)",
-    docstring=(
-        "The dialect for `SOQL <https://developer.salesforce.com/docs/"
-        "atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql.htm>`_ "
-        "(Salesforce Object Query Language)."
-    ),
-)
-
-soql_dialect.insert_lexer_matchers(
-    [
-        # Date and datetime literals as per:
-        # https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql_select_dateformats.htm
-        RegexLexer(
-            "datetime_literal",
-            r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|(\+|\-)[0-9]{2}:[0-9]{2})",  # noqa E501
-            CodeSegment,
-        ),
-        RegexLexer(
-            "date_literal",
-            r"[0-9]{4}-[0-9]{2}-[0-9]{2}",
-            CodeSegment,
-        ),
-    ],
-    before="numeric_literal",
-)
+soql_dialect = ansi_dialect.copy_as("soql")
 
 date_literals = {
     "YESTERDAY",
@@ -115,17 +80,7 @@ soql_dialect.replace(
         insert=[
             Ref("DateLiteralNSegment"),
         ]
-    ),
-    DateTimeLiteralGrammar=OneOf(
-        TypedParser("date_literal", LiteralSegment, type="date_literal"),
-        TypedParser("datetime_literal", LiteralSegment, type="datetime_literal"),
-        Sequence(
-            OneOf("DATE", "TIME", "TIMESTAMP", "INTERVAL"),
-            TypedParser(
-                "single_quote", LiteralSegment, type="date_constructor_literal"
-            ),
-        ),
-    ),
+    )
 )
 
 
@@ -136,3 +91,4 @@ class StatementSegment(ansi.StatementSegment):
     """
 
     match_grammar = Ref("SelectableGrammar")
+    parse_grammar = Ref("SelectableGrammar")

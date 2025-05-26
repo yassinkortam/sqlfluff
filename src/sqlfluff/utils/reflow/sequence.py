@@ -1,63 +1,153 @@
 """Dataclasses for reflow work."""
 
-import logging
-from collections.abc import Iterator, Sequence
-from itertools import chain
-from typing import Literal, Optional, cast
 
+from dataclasses import dataclass
+from itertools import chain
+import logging
+from typing import Iterator, List, Optional, Sequence, Tuple, cast, Type, Union
 from sqlfluff.core.config import FluffConfig
+
 from sqlfluff.core.parser import BaseSegment, RawSegment
-from sqlfluff.core.rules import LintFix, LintResult
+from sqlfluff.core.rules.base import LintFix
 from sqlfluff.utils.reflow.config import ReflowConfig
 from sqlfluff.utils.reflow.depthmap import DepthMap
-from sqlfluff.utils.reflow.elements import (
-    ReflowBlock,
-    ReflowPoint,
-    ReflowSequenceType,
-    get_consumed_whitespace,
-)
-from sqlfluff.utils.reflow.helpers import fixes_from_results
-from sqlfluff.utils.reflow.rebreak import rebreak_keywords_sequence, rebreak_sequence
-from sqlfluff.utils.reflow.reindent import (
-    construct_single_indent,
-    lint_indent_points,
-    lint_line_length,
-)
+
+from sqlfluff.utils.reflow.elements import ReflowBlock, ReflowPoint
 
 # We're in the utils module, but users will expect reflow
 # logs to appear in the context of rules. Hence it's a subset
 # of the rules logger.
 reflow_logger = logging.getLogger("sqlfluff.rules.reflow")
+ReflowSequenceType = List[Union[ReflowBlock, ReflowPoint]]
+
+
+@dataclass(frozen=True)
+class _RebreakSpan:
+    """A location within a sequence to consider rebreaking."""
+
+    target: BaseSegment
+    start_idx: int
+    end_idx: int
+    line_position: str
+    strict: bool
+
+
+@dataclass(frozen=True)
+class _RebreakIndices:
+    """Indices of points for a _RebreakLocation."""
+
+    dir: int
+    adj_pt_idx: int
+    newline_pt_idx: int
+    pre_code_pt_idx: int
+
+    @classmethod
+    def from_elements(
+        cls: Type["_RebreakIndices"],
+        elements: ReflowSequenceType,
+        start_idx: int,
+        dir: int,
+    ) -> "_RebreakIndices":
+        """Iterate through the elements to deduce important point indices."""
+        assert dir in (1, -1), "Direction must be a unit direction (i.e. 1 or -1)."
+        # Limit depends on the direction
+        limit = 0 if dir == -1 else len(elements)
+        # The adjacent point is just the next one.
+        adj_point_idx = start_idx + dir
+        # The newline point is next. We hop in 2s because we're checking
+        # only points, which alternate with blocks.
+        for newline_point_idx in range(adj_point_idx, limit, 2 * dir):
+            if "newline" in elements[newline_point_idx].class_types or any(
+                seg.is_code for seg in elements[newline_point_idx + dir].segments
+            ):
+                break
+        # Finally we look for the point preceding the next code element.
+        for pre_code_point_idx in range(newline_point_idx, limit, 2 * dir):
+            if any(seg.is_code for seg in elements[pre_code_point_idx + dir].segments):
+                break
+        return cls(dir, adj_point_idx, newline_point_idx, pre_code_point_idx)
+
+
+@dataclass(frozen=True)
+class _RebreakLocation:
+    """A location within a sequence to rebreak, with metadata."""
+
+    target: BaseSegment
+    prev: _RebreakIndices
+    next: _RebreakIndices
+    line_position: str
+    strict: bool
+
+    @classmethod
+    def from_span(
+        cls: Type["_RebreakLocation"], span: _RebreakSpan, elements: ReflowSequenceType
+    ) -> "_RebreakLocation":
+        """Expand a span to a location."""
+        return cls(
+            span.target,
+            _RebreakIndices.from_elements(elements, span.start_idx, -1),
+            _RebreakIndices.from_elements(elements, span.end_idx, 1),
+            span.line_position,
+            span.strict,
+        )
+
+    def has_templated_newline(self, elements: ReflowSequenceType) -> bool:
+        """Is either side a templated newline?
+
+        If either side has a templated newline, then that's ok too.
+        The intent here is that if the next newline is a _templated_
+        one, then in the source there will be a tag ({{ tag }}), which
+        acts like _not having a newline_.
+        """
+        # Check the _last_ newline of the previous point.
+        # Slice backward to search in reverse.
+        for seg in elements[self.prev.newline_pt_idx].segments[::-1]:
+            if seg.is_type("newline"):
+                if not seg.pos_marker.is_literal():
+                    return True
+                break
+        # Check the _first_ newline of the next point.
+        for seg in elements[self.next.newline_pt_idx].segments:
+            if seg.is_type("newline"):
+                if not seg.pos_marker.is_literal():
+                    return True
+                break
+        return False
+
+    def has_inappropriate_newlines(
+        self, elements: ReflowSequenceType, strict: bool = False
+    ) -> bool:
+        """Is the span surrounded by one (but not two) line breaks?
+
+        Args:
+            elements: The elements of the ReflowSequence this element
+               is taken from to allow comparison.
+            strict (:obj:`bool`): If set to true, this will not allow
+               the case where there aren't newlines on either side.
+        """
+        # Here we use the newline index, not
+        # just the adjacent point, so that we can see past comments.
+        n_prev_newlines = elements[self.prev.newline_pt_idx].num_newlines()
+        n_next_newlines = elements[self.next.newline_pt_idx].num_newlines()
+        newlines_on_neither_side = n_prev_newlines + n_next_newlines == 0
+        newlines_on_both_sides = n_prev_newlines > 0 and n_next_newlines > 0
+        return (
+            # If there isn't a newline on either side then carry
+            # on, unless it's strict.
+            (newlines_on_neither_side and not strict)
+            # If there is a newline on BOTH sides. That's ok.
+            or newlines_on_both_sides
+        )
 
 
 class ReflowSequence:
     """Class for keeping track of elements in a reflow operation.
 
-    This acts as the primary route into using the reflow routines.
-    It acts in a way that plays nicely within a rule context in that
-    it accepts segments and configuration, while allowing access to
-    modified segments and a series of :obj:`LintFix` objects, which
-    can be returned by the calling rule.
+    It is assumed that there will be alternating blocks and points
+    (even if some points have no segments). This is validated on
+    construction.
 
-    Sequences are made up of alternating :obj:`ReflowBlock` and
-    :obj:`ReflowPoint` objects (even if some points have no segments).
-    This is validated on construction.
-
-    Most operations also return :obj:`ReflowSequence` objects such
-    that operations can be chained, and then the resultant fixes
-    accessed at the last stage, for example:
-
-    .. code-block:: py3
-
-        fixes = (
-            ReflowSequence.from_around_target(
-                context.segment,
-                root_segment=context.parent_stack[0],
-                config=context.config,
-            )
-            .rebreak()
-            .get_fixes()
-        )
+    We assume points on each end because this is the case with a file.
     """
 
     def __init__(
@@ -66,7 +156,7 @@ class ReflowSequence:
         root_segment: BaseSegment,
         reflow_config: ReflowConfig,
         depth_map: DepthMap,
-        lint_results: Optional[list[LintResult]] = None,
+        embodied_fixes: Optional[List[LintFix]] = None,
     ):
         # First validate integrity
         self._validate_reflow_sequence(elements)
@@ -79,35 +169,61 @@ class ReflowSequence:
         # Alternatively pictured: This is the list of fixes required
         # to generate this sequence. We can build on this as we edit
         # the sequence.
-        # Rather than saving *fixes* directly, we package them into
-        # LintResult objects to make it a little easier to expose them
-        # in the CLI.
-        self.lint_results: list[LintResult] = lint_results or []
+        self.embodied_fixes: List[LintFix] = embodied_fixes or []
 
-    def get_fixes(self) -> list[LintFix]:
-        """Get the current fix buffer.
+    def get_fixes(self) -> List[LintFix]:
+        """Get the current fix buffer."""
+        return self.embodied_fixes
 
-        We're hydrating them here directly from the LintResult
-        objects, so for more accurate results, consider using
-        .get_results(). This method is particularly useful
-        when consolidating multiple results into one.
-        """
-        return fixes_from_results(self.lint_results)
+    def get_partitioned_fixes(
+        self, target: BaseSegment
+    ) -> Tuple[List[LintFix], List[LintFix], List[LintFix]]:
+        """Get the current fix buffer partitioned around a target."""
+        first_target_raw = target.raw_segments[0]
+        last_target_raw = target.raw_segments[-1]
 
-    def get_results(self) -> list[LintResult]:
-        """Return the current result buffer."""
-        return self.lint_results
+        assert target.pos_marker
+        pre_fixes = [
+            fix
+            for fix in self.embodied_fixes
+            if fix.anchor.pos_marker
+            and (
+                fix.anchor.pos_marker.working_loc
+                < first_target_raw.pos_marker.working_loc
+                or (
+                    fix.edit_type == "create_before"
+                    and fix.anchor.pos_marker.working_loc
+                    == first_target_raw.pos_marker.working_loc
+                )
+            )
+        ]
+        post_fixes = [
+            fix
+            for fix in self.embodied_fixes
+            if fix.anchor.pos_marker
+            and (
+                fix.anchor.pos_marker.working_loc
+                > last_target_raw.pos_marker.working_loc
+                or (
+                    fix.edit_type == "create_after"
+                    and fix.anchor.pos_marker.working_loc
+                    == last_target_raw.pos_marker.working_loc
+                )
+            )
+        ]
+        # The rest
+        mid_fixes = [
+            fix for fix in self.embodied_fixes if fix not in pre_fixes + post_fixes
+        ]
+        return pre_fixes, mid_fixes, post_fixes
 
-    def get_raw(self) -> str:
+    def get_raw(self):
         """Get the current raw representation."""
         return "".join(elem.raw for elem in self.elements)
 
     @staticmethod
-    def _validate_reflow_sequence(elements: ReflowSequenceType) -> None:
-        # An empty set of elements _is_ allowed as an edge case.
-        if not elements:
-            # Return early if so
-            return None
+    def _validate_reflow_sequence(elements: ReflowSequenceType):
+        assert elements, "ReflowSequence has empty elements."
         # Check odds and evens
         OddType = elements[0].__class__
         EvenType = ReflowPoint if OddType is ReflowBlock else ReflowBlock
@@ -120,7 +236,6 @@ class ReflowSequence:
             assert all(
                 isinstance(elem, EvenType) for elem in elements[1::2]
             ), f"Not all even elements are {EvenType.__name__}"
-            return None
         except AssertionError as err:  # pragma: no cover
             for elem in elements:
                 reflow_logger.error("   - %s", elem)
@@ -137,16 +252,11 @@ class ReflowSequence:
         which simplifies iteration here.
         """
         elem_buff: ReflowSequenceType = []
-        seg_buff: list[RawSegment] = []
+        seg_buff: List[RawSegment] = []
         for seg in segments:
             # NOTE: end_of_file is block-like rather than point-like.
             # This is to facilitate better evaluation of the ends of files.
-            # NOTE: This also allows us to include literal placeholders for
-            # whitespace only strings.
-            if (
-                seg.is_type("whitespace", "newline", "indent")
-                or (get_consumed_whitespace(seg) or "").isspace()
-            ):
+            if seg.is_type("whitespace", "newline", "indent"):
                 # Add to the buffer and move on.
                 seg_buff.append(seg)
                 continue
@@ -157,7 +267,7 @@ class ReflowSequence:
             # Add the block, with config info.
             elem_buff.append(
                 ReflowBlock.from_config(
-                    segments=(seg,),
+                    segments=[seg],
                     config=reflow_config,
                     depth_info=depth_map.get_depth_info(seg),
                 )
@@ -173,7 +283,7 @@ class ReflowSequence:
 
     @classmethod
     def from_raw_segments(
-        cls: type["ReflowSequence"],
+        cls: Type["ReflowSequence"],
         segments: Sequence[RawSegment],
         root_segment: BaseSegment,
         config: FluffConfig,
@@ -181,13 +291,8 @@ class ReflowSequence:
     ) -> "ReflowSequence":
         """Construct a ReflowSequence from a sequence of raw segments.
 
-        This is intended as a base constructor, which others can use.
-        In particular, if no `depth_map` argument is provided, this
-        method will generate one in a potentially inefficient way.
-        If the calling method has access to a better way of inferring
-        a depth map (for example because it has access to a common root
-        segment for all the content), it should do that instead and pass
-        it in.
+        Aimed to be the basic constructor, which other more specific
+        ones may fall back to.
         """
         reflow_config = ReflowConfig.from_fluff_config(config)
         if depth_map is None:
@@ -207,16 +312,9 @@ class ReflowSequence:
 
     @classmethod
     def from_root(
-        cls: type["ReflowSequence"], root_segment: BaseSegment, config: FluffConfig
+        cls: Type["ReflowSequence"], root_segment: BaseSegment, config: FluffConfig
     ) -> "ReflowSequence":
-        """Generate a sequence from a root segment.
-
-        Args:
-            root_segment (:obj:`BaseSegment`): The relevant root
-                segment (usually the base :obj:`FileSegment`).
-            config (:obj:`FluffConfig`): A config object from which
-                to load the spacing behaviours of different segments.
-        """
+        """Generate a sequence from a root segment."""
         return cls.from_raw_segments(
             root_segment.raw_segments,
             root_segment,
@@ -227,7 +325,7 @@ class ReflowSequence:
 
     @classmethod
     def from_around_target(
-        cls: type["ReflowSequence"],
+        cls: Type["ReflowSequence"],
         target_segment: BaseSegment,
         root_segment: BaseSegment,
         config: FluffConfig,
@@ -247,8 +345,8 @@ class ReflowSequence:
                 set to "before" or "after" to limit to either side.
 
 
-        **NOTE**: We don't just expand to the first block around the
-        target but to the first *code* element, which means we
+        NOTE: We don't just expand to the first block around the
+        target but to the first _code_ element, which means we
         may swallow several `comment` blocks in the process.
 
         To evaluate reflow around a specific target, we need
@@ -299,10 +397,12 @@ class ReflowSequence:
         )
 
     def without(self, target: RawSegment) -> "ReflowSequence":
-        """Returns a new :obj:`ReflowSequence` without the specified segment.
+        """Returns a new reflow sequence without the specified segment.
 
-        This generates appropriate deletion :obj:`LintFix` objects
-        to direct the linter to remove those elements.
+        It's important to note that this doesn't itself remove the target
+        from the file. This just allows us to simulate a sequence without it
+        and work out what additional whitespace changes would be required
+        if we were to remove it.
         """
         removal_idx = self._find_element_idx_with(target)
         if removal_idx == 0 or removal_idx == len(self.elements) - 1:
@@ -325,17 +425,16 @@ class ReflowSequence:
             reflow_config=self.reflow_config,
             depth_map=self.depth_map,
             # Generate the fix to do the removal.
-            lint_results=[LintResult(target, [LintFix.delete(target)])],
+            embodied_fixes=[LintFix.delete(target)],
         )
 
     def insert(
         self, insertion: RawSegment, target: RawSegment, pos: str = "before"
     ) -> "ReflowSequence":
-        """Returns a new :obj:`ReflowSequence` with the new element inserted.
+        """Returns a new reflow sequence with the new element inserted.
 
         Insertion is always relative to an existing element. Either before
-        or after it as specified by `pos`. This generates appropriate creation
-        :obj:`LintFix` objects to direct the linter to insert those elements.
+        or after it as specified by `pos`.
         """
         assert pos in ("before", "after")
         target_idx = self._find_element_idx_with(target)
@@ -354,7 +453,7 @@ class ReflowSequence:
         # the target.
         self.depth_map.copy_depth_info(target, insertion)
         new_block = ReflowBlock.from_config(
-            segments=(insertion,),
+            segments=[insertion],
             config=self.reflow_config,
             depth_info=self.depth_map.get_depth_info(target),
         )
@@ -371,9 +470,7 @@ class ReflowSequence:
                 reflow_config=self.reflow_config,
                 depth_map=self.depth_map,
                 # Generate the fix to do the removal.
-                lint_results=[
-                    LintResult(target, [LintFix.create_before(target, [insertion])])
-                ],
+                embodied_fixes=[LintFix.create_before(target, [insertion])],
             )
         elif pos == "after":  # pragma: no cover
             # TODO: This doesn't get coverage - should it even exist?
@@ -387,9 +484,7 @@ class ReflowSequence:
                 reflow_config=self.reflow_config,
                 depth_map=self.depth_map,
                 # Generate the fix to do the removal.
-                lint_results=[
-                    LintResult(target, [LintFix.create_after(target, [insertion])])
-                ],
+                embodied_fixes=[LintFix.create_after(target, [insertion])],
             )
         raise ValueError(
             f"Unexpected value for ReflowSequence.insert(pos): {pos}"
@@ -398,11 +493,9 @@ class ReflowSequence:
     def replace(
         self, target: BaseSegment, edit: Sequence[BaseSegment]
     ) -> "ReflowSequence":
-        """Returns a new :obj:`ReflowSequence` with `edit` elements replaced.
+        """Returns a new reflow sequence with `edit` elements replaced."""
+        replace_fix = LintFix.replace(target, edit)
 
-        This generates appropriate replacement :obj:`LintFix` objects to direct
-        the linter to modify those elements.
-        """
         target_raws = target.raw_segments
         assert target_raws
 
@@ -443,12 +536,12 @@ class ReflowSequence:
             root_segment=self.root_segment,
             reflow_config=self.reflow_config,
             depth_map=self.depth_map,
-            lint_results=[LintResult(target, [LintFix.replace(target, edit)])],
+            embodied_fixes=[replace_fix],
         )
 
     def _iter_points_with_constraints(
         self,
-    ) -> Iterator[tuple[ReflowPoint, Optional[ReflowBlock], Optional[ReflowBlock]]]:
+    ) -> Iterator[Tuple[ReflowPoint, Optional[ReflowBlock], Optional[ReflowBlock]]]:
         for idx, elem in enumerate(self.elements):
             # Only evaluate points.
             if isinstance(elem, ReflowPoint):
@@ -463,11 +556,11 @@ class ReflowSequence:
     def respace(
         self, strip_newlines: bool = False, filter: str = "all"
     ) -> "ReflowSequence":
-        """Returns a new :obj:`ReflowSequence` with points respaced.
+        """Respace a sequence.
 
         Args:
             strip_newlines (:obj:`bool`): Optionally strip newlines
-                before respacing. This is primarily used on focused
+                before respacing. This is primarily used on focussed
                 sequences to coerce objects onto a single line. This
                 does not apply any prioritisation to which line breaks
                 to remove and so is not a substitute for the full
@@ -480,8 +573,8 @@ class ReflowSequence:
                 most useful for filtering between trailing whitespace
                 and fixes between content on a line.
 
-        **NOTE** this method relies on the embodied results being correct
-        so that we can build on them.
+        This resets spacing in a ReflowSequence. Note, it relies on the
+        embodied fixes being correct so that we can build on them.
         """
         assert filter in (
             "all",
@@ -489,23 +582,23 @@ class ReflowSequence:
             "inline",
         ), f"Unexpected value for filter: {filter}"
         # Use the embodied fixes as a starting point.
-        lint_results = self.get_results()
+        fixes = self.embodied_fixes or []
         new_elements: ReflowSequenceType = []
         for point, pre, post in self._iter_points_with_constraints():
             # We filter on the elements POST RESPACE. This is to allow
             # strict respacing to reclaim newlines.
-            new_lint_results, new_point = point.respace_point(
+            new_fixes, new_point = point.respace_point(
                 prev_block=pre,
                 next_block=post,
                 root_segment=self.root_segment,
-                lint_results=lint_results,
+                fixes=fixes,
                 strip_newlines=strip_newlines,
             )
             # If filter has been set, optionally unset the returned values.
             if (
                 filter == "inline"
-                # NOTE: We test on the NEW point.
                 if (
+                    # NOTE: We test on the NEW point.
                     any(seg.is_type("newline") for seg in new_point.segments)
                     # Or if it's followed by the end of file
                     or (post and "end_of_file" in post.class_types)
@@ -519,7 +612,10 @@ class ReflowSequence:
                 new_point = point
             # Otherwise apply the new fixes
             else:
-                lint_results = new_lint_results
+                reflow_logger.debug(
+                    "    Filter %r allows fixes for point: %s", filter, new_fixes
+                )
+                fixes = new_fixes
 
             if pre and (not new_elements or new_elements[-1] != pre):
                 new_elements.append(pre)
@@ -531,107 +627,325 @@ class ReflowSequence:
             root_segment=self.root_segment,
             reflow_config=self.reflow_config,
             depth_map=self.depth_map,
-            lint_results=lint_results,
+            # Generate the fix to do the removal.
+            embodied_fixes=fixes,
         )
 
-    def rebreak(
-        self, rebreak_type: Literal["lines", "keywords"] = "lines"
-    ) -> "ReflowSequence":
-        """Returns a new :obj:`ReflowSequence` corrected line breaks.
+    @staticmethod
+    def _identify_rebreak_spans(
+        element_buffer: ReflowSequenceType, root_segment: BaseSegment
+    ) -> List[_RebreakSpan]:
+        spans: List[_RebreakSpan] = []
+        # We'll need at least two elements each side, so constrain
+        # our range accordingly.
+        for idx in range(2, len(element_buffer) - 2):
+            # Only evaluate blocks:
+            elem = element_buffer[idx]
+            # Only evaluate blocks
+            if not isinstance(elem, ReflowBlock):
+                continue
+            # Does the element itself have config? (The easy case)
+            if elem.line_position:
+                # Blocks should only have one segment so it's easy to pick it.
+                spans.append(
+                    _RebreakSpan(
+                        elem.segments[0],
+                        idx,
+                        idx,
+                        # NOTE: this isn't pretty but until it needs to be more
+                        # complex, this works.
+                        elem.line_position.split(":")[0],
+                        elem.line_position.endswith("strict"),
+                    )
+                )
+            # Do any of its parents have config, and are we at the start
+            # of them?
+            for key in elem.line_position_configs.keys():
+                # If we're not at the start of the segment, then pass.
+                if elem.depth_info.stack_positions[key].idx != 0:
+                    continue
+                # Can we find the end?
+                for end_idx in range(idx, len(element_buffer) - 2):
+                    end_elem = element_buffer[end_idx]
+                    if not isinstance(end_elem, ReflowBlock):
+                        continue
+                    if end_elem.depth_info.stack_positions[key].type in ("end", "solo"):
+                        # Found the end. Add it to the stack.
+                        # We reference the appropriate element from the parent stack.
+                        target_depth = elem.depth_info.stack_hashes.index(key)
+                        target = root_segment.path_to(element_buffer[idx].segments[0])[
+                            target_depth
+                        ].segment
+                        spans.append(
+                            _RebreakSpan(
+                                target,
+                                idx,
+                                end_idx,
+                                # NOTE: this isn't pretty but until it needs to be more
+                                # complex, this works.
+                                elem.line_position_configs[key].split(":")[0],
+                                elem.line_position_configs[key].endswith("strict"),
+                            )
+                        )
+                        break
+                # If we find the start, but not the end, it's not a problem, but
+                # we won't be rebreaking this span. This is important so that we
+                # don't rebreak part of something without the context of what's
+                # in the rest of it. We continue without adding it to the buffer.
+        return spans
 
-        This intentionally **does not handle indentation**,
+    def _deduce_line_indent(self, raw_segment: RawSegment) -> str:
+        """Given a raw segment, deduce the indent of it's line."""
+        seg_idx = self.root_segment.raw_segments.index(raw_segment)
+        indent_seg = None
+        for seg in self.root_segment.raw_segments[seg_idx::-1]:
+            if seg.is_code:
+                indent_seg = None
+            elif seg.is_type("whitespace"):
+                indent_seg = seg
+            elif seg.is_type("newline"):
+                break
+        reflow_logger.debug("Deduced indent for %s as %s", raw_segment, indent_seg)
+        if indent_seg:
+            return indent_seg.raw
+        else:
+            return ""
+
+    def rebreak(self):
+        """Reflow line breaks within a sequence.
+
+        Initially this only _moves_ existing segments
+        around line breaks (e.g. for operators and commas),
+        but eventually this method should also handle line
+        length considerations too.
+
+        This intentionally does *not* handle indentation,
         as the existing indents are assumed to be correct.
-
-        .. note::
-
-            Currently this only *moves* existing segments
-            around line breaks (e.g. for operators and commas),
-            but eventually this method will also handle line
-            length considerations too.
         """
-        if self.lint_results:
+        if self.embodied_fixes:
             raise NotImplementedError(  # pragma: no cover
                 "rebreak cannot currently handle pre-existing embodied fixes."
             )
 
-        # Delegate to the rebreak algorithm
-        if rebreak_type == "lines":
-            elem_buff, lint_results = rebreak_sequence(self.elements, self.root_segment)
-        elif rebreak_type == "keywords":
-            elem_buff, lint_results = rebreak_keywords_sequence(
-                self.elements, self.root_segment
+        fixes = []
+        elem_buff: ReflowSequenceType = self.elements.copy()
+
+        # Given a sequence we should identify the objects which
+        # make sense to rebreak. That includes any raws with config,
+        # but also and parent segments which have config and we can
+        # find both ends for. Given those spans, we then need to find
+        # the points either side of them and then the blocks either
+        # side to respace them at the same time.
+
+        # 1. First find appropriate spans.
+        spans = self._identify_rebreak_spans(self.elements, self.root_segment)
+
+        # The spans give us the edges of operators, but for line positioning we need
+        # to handle comments differently. There are two other important points:
+        # 1. The next newline outward before code (but passing over comments).
+        # 2. The point before the next _code_ segment (ditto comments).
+        locations = [_RebreakLocation.from_span(span, self.elements) for span in spans]
+
+        # Handle each span:
+        for loc in locations:
+
+            reflow_logger.debug(
+                "Handing Rebreak Span (%r: %s): %r",
+                loc.line_position,
+                loc.target,
+                "".join(
+                    elem.raw
+                    for elem in elem_buff[
+                        loc.prev.pre_code_pt_idx - 1 : loc.next.pre_code_pt_idx + 2
+                    ]
+                ),
             )
-        else:  # pragma: no cover
-            raise NotImplementedError(
-                f"Rebreak type of `{rebreak_type}` is not supported."
-            )
+
+            if loc.has_inappropriate_newlines(elem_buff, strict=loc.strict):
+                continue
+
+            if loc.has_templated_newline(elem_buff):
+                continue
+
+            # Points and blocks either side are just offsets from the indices.
+            prev_point = elem_buff[loc.prev.adj_pt_idx]
+            next_point = elem_buff[loc.next.adj_pt_idx]
+
+            # So we know we have a preference, is it ok?
+            if loc.line_position == "leading":
+                if elem_buff[loc.prev.newline_pt_idx].num_newlines():
+                    # We're good. It's already leading.
+                    continue
+                # Is it the simple case with no comments between the
+                # old and new desired locations and only a single following
+                # whitespace?
+                elif (
+                    loc.next.adj_pt_idx == loc.next.pre_code_pt_idx
+                    and elem_buff[loc.next.newline_pt_idx].num_newlines() == 1
+                ):
+                    reflow_logger.debug("  Trailing Easy Case")
+                    # Simple case. No comments.
+                    # Strip newlines from the next point. Apply the indent to
+                    # the previous point.
+                    fixes, prev_point = prev_point.indent_to(
+                        next_point.get_indent() or "", before=loc.target
+                    )
+                    fixes, next_point = next_point.respace_point(
+                        elem_buff[loc.next.adj_pt_idx - 1],
+                        elem_buff[loc.next.adj_pt_idx + 1],
+                        root_segment=self.root_segment,
+                        fixes=fixes,
+                        strip_newlines=True,
+                    )
+                    # Update the points in the buffer
+                    elem_buff[loc.prev.adj_pt_idx] = prev_point
+                    elem_buff[loc.next.adj_pt_idx] = next_point
+                else:
+                    reflow_logger.debug("  Trailing Tricky Case")
+                    # Otherwise we've got a tricky scenario where there are comments
+                    # to negotiate around. In this case, we _move the target_
+                    # rather than just adjusting the whitespace.
+
+                    # Delete the existing position of the target, and
+                    # the _preceding_ point.
+                    fixes.append(LintFix.delete(loc.target))
+                    for seg in elem_buff[loc.prev.adj_pt_idx].segments:
+                        fixes.append(LintFix.delete(seg))
+
+                    # We always reinsert after the first point, but respace
+                    # the inserted point to ensure it's the right size given
+                    # configs.
+                    fixes, new_point = ReflowPoint([]).respace_point(
+                        elem_buff[loc.next.adj_pt_idx - 1],
+                        elem_buff[loc.next.pre_code_pt_idx + 1],
+                        root_segment=self.root_segment,
+                        fixes=fixes,
+                        anchor_on="after",
+                    )
+                    fixes.append(
+                        LintFix.create_after(
+                            elem_buff[loc.next.pre_code_pt_idx].segments[-1],
+                            [loc.target],
+                        )
+                    )
+
+                    elem_buff = (
+                        elem_buff[: loc.prev.adj_pt_idx]
+                        + elem_buff[loc.next.adj_pt_idx : loc.next.pre_code_pt_idx + 1]
+                        + elem_buff[
+                            loc.prev.adj_pt_idx + 1 : loc.next.adj_pt_idx
+                        ]  # the target
+                        + [new_point]
+                        + elem_buff[loc.next.pre_code_pt_idx + 1 :]
+                    )
+
+            elif loc.line_position == "trailing":
+                if elem_buff[loc.next.newline_pt_idx].num_newlines():
+                    # We're good, it's already trailing.
+                    continue
+                # Is it the simple case with no comments between the
+                # old and new desired locations and only one previous newline?
+                elif (
+                    loc.prev.adj_pt_idx == loc.prev.pre_code_pt_idx
+                    and elem_buff[loc.prev.newline_pt_idx].num_newlines() == 1
+                ):
+                    reflow_logger.debug("  Leading Easy Case")
+                    # Simple case. No comments.
+                    # Strip newlines from the previous point. Apply the indent
+                    # to the next point.
+                    fixes, next_point = next_point.indent_to(
+                        prev_point.get_indent() or "", after=loc.target
+                    )
+                    fixes, prev_point = prev_point.respace_point(
+                        elem_buff[loc.prev.adj_pt_idx - 1],
+                        elem_buff[loc.prev.adj_pt_idx + 1],
+                        root_segment=self.root_segment,
+                        fixes=fixes,
+                        strip_newlines=True,
+                    )
+                    # Update the points in the buffer
+                    elem_buff[loc.prev.adj_pt_idx] = prev_point
+                    elem_buff[loc.next.adj_pt_idx] = next_point
+                else:
+                    reflow_logger.debug("  Leading Tricky Case")
+                    # Otherwise we've got a tricky scenario where there are comments
+                    # to negotiate around. In this case, we _move the target_
+                    # rather than just adjusting the whitespace.
+
+                    # Delete the existing position of the target, and
+                    # the _following_ point.
+                    fixes.append(LintFix.delete(loc.target))
+                    for seg in elem_buff[loc.next.adj_pt_idx].segments:
+                        fixes.append(LintFix.delete(seg))
+
+                    # We always reinsert before the first point, but respace
+                    # the inserted point to ensure it's the right size given
+                    # configs.
+                    fixes, new_point = ReflowPoint([]).respace_point(
+                        elem_buff[loc.prev.pre_code_pt_idx - 1],
+                        elem_buff[loc.prev.adj_pt_idx + 1],
+                        root_segment=self.root_segment,
+                        fixes=fixes,
+                        anchor_on="before",
+                    )
+                    fixes.append(
+                        LintFix.create_before(
+                            elem_buff[loc.prev.pre_code_pt_idx].segments[0],
+                            [loc.target],
+                        )
+                    )
+
+                    elem_buff = (
+                        elem_buff[: loc.prev.pre_code_pt_idx]
+                        + [new_point]
+                        + elem_buff[
+                            loc.prev.adj_pt_idx + 1 : loc.next.adj_pt_idx
+                        ]  # the target
+                        + elem_buff[loc.prev.pre_code_pt_idx : loc.prev.adj_pt_idx + 1]
+                        + elem_buff[loc.next.adj_pt_idx + 1 :]
+                    )
+
+            elif loc.line_position == "alone":
+                # If we get here we can assume that the element is currently
+                # either leading or trailing and needs to be moved onto its
+                # own line.
+
+                # First handle the following newlines first (easy).
+                if not elem_buff[loc.next.newline_pt_idx].num_newlines():
+                    reflow_logger.debug("  Found missing newline after in alone case")
+                    pre_fixes, next_point = next_point.indent_to(
+                        self._deduce_line_indent(loc.target.raw_segments[-1]),
+                        after=loc.target,
+                    )
+                    fixes += pre_fixes
+                    # Update the point in the buffer
+                    elem_buff[loc.next.adj_pt_idx] = next_point
+
+                # Then handle newlines before. (hoisting past comments if needed).
+                if not elem_buff[loc.prev.adj_pt_idx].num_newlines():
+                    reflow_logger.debug("  Found missing newline before in alone case")
+                    # NOTE: In the case that there are comments _after_ the
+                    # target, they will be moved with it. This might break things
+                    # but there isn't an unambiguous way to do this, because we
+                    # can't be sure what the comments are referring to.
+                    # Given that, we take the simple option.
+                    post_fixes, prev_point = prev_point.indent_to(
+                        self._deduce_line_indent(loc.target.raw_segments[0]),
+                        before=loc.target,
+                    )
+                    fixes += post_fixes
+                    # Update the point in the buffer
+                    elem_buff[loc.prev.adj_pt_idx] = prev_point
+
+            else:
+                raise NotImplementedError(  # pragma: no cover
+                    f"Unexpected line_position config: {loc.line_position}"
+                )
 
         return ReflowSequence(
             elements=elem_buff,
             root_segment=self.root_segment,
             reflow_config=self.reflow_config,
             depth_map=self.depth_map,
-            lint_results=lint_results,
-        )
-
-    def reindent(self) -> "ReflowSequence":
-        """Reindent lines within a sequence."""
-        if self.lint_results:
-            raise NotImplementedError(  # pragma: no cover
-                "rebreak cannot currently handle pre-existing embodied fixes."
-            )
-
-        single_indent = construct_single_indent(
-            indent_unit=self.reflow_config.indent_unit,
-            tab_space_size=self.reflow_config.tab_space_size,
-        )
-
-        reflow_logger.info("# Evaluating indents.")
-        elements, indent_results = lint_indent_points(
-            self.elements,
-            single_indent=single_indent,
-            skip_indentation_in=self.reflow_config.skip_indentation_in,
-            allow_implicit_indents=self.reflow_config.allow_implicit_indents,
-            ignore_comment_lines=self.reflow_config.ignore_comment_lines,
-        )
-
-        return ReflowSequence(
-            elements=elements,
-            root_segment=self.root_segment,
-            reflow_config=self.reflow_config,
-            depth_map=self.depth_map,
-            lint_results=indent_results,
-        )
-
-    def break_long_lines(self) -> "ReflowSequence":
-        """Rebreak any remaining long lines in a sequence.
-
-        This assumes that reindent() has already been applied.
-        """
-        if self.lint_results:
-            raise NotImplementedError(  # pragma: no cover
-                "break_long_lines cannot currently handle pre-existing embodied fixes."
-            )
-
-        single_indent = construct_single_indent(
-            indent_unit=self.reflow_config.indent_unit,
-            tab_space_size=self.reflow_config.tab_space_size,
-        )
-
-        reflow_logger.info("# Evaluating line lengths.")
-        elements, length_results = lint_line_length(
-            self.elements,
-            self.root_segment,
-            single_indent=single_indent,
-            line_length_limit=self.reflow_config.max_line_length,
-            allow_implicit_indents=self.reflow_config.allow_implicit_indents,
-            trailing_comments=self.reflow_config.trailing_comments,
-        )
-
-        return ReflowSequence(
-            elements=elements,
-            root_segment=self.root_segment,
-            reflow_config=self.reflow_config,
-            depth_map=self.depth_map,
-            lint_results=length_results,
+            embodied_fixes=fixes,
         )

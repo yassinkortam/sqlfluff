@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: c60781b1f9ce3b7db9a2144cbbc28c14fcbb7141fc0df394cd0d444fa50138c3
+_hash: 7eb4fb1603f437728979d755c7316334d6dd9673f296aabfacf858596c696296
 file:
   statement:
     create_table_statement:
@@ -49,22 +49,20 @@ file:
       - column_definition:
           naked_identifier: app
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: appName
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - comma: ','
-              - naked_identifier: adamId
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: appName
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - comma: ','
+          - naked_identifier: adamId
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: servingStatus
@@ -81,14 +79,12 @@ file:
       - column_definition:
           naked_identifier: countriesOrRegions
           data_type:
-            array_type:
-              keyword: array
-              array_type_schema:
-                start_angle_bracket: <
-                data_type:
-                  primitive_type:
-                    keyword: string
-                end_angle_bracket: '>'
+            keyword: array
+            start_angle_bracket: <
+            data_type:
+              primitive_type:
+                keyword: string
+            end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: modificationTime
@@ -99,42 +95,38 @@ file:
       - column_definition:
           naked_identifier: totalBudget
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: amount
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: int
-              - comma: ','
-              - naked_identifier: currency
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: amount
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: int
+          - comma: ','
+          - naked_identifier: currency
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: dailyBudget
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: amount
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: int
-              - comma: ','
-              - naked_identifier: currency
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: amount
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: int
+          - comma: ','
+          - naked_identifier: currency
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: displayStatus
@@ -145,14 +137,12 @@ file:
       - column_definition:
           naked_identifier: supplySources
           data_type:
-            array_type:
-              keyword: array
-              array_type_schema:
-                start_angle_bracket: <
-                data_type:
-                  primitive_type:
-                    keyword: string
-                end_angle_bracket: '>'
+            keyword: array
+            start_angle_bracket: <
+            data_type:
+              primitive_type:
+                keyword: string
+            end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: adChannelType
@@ -235,82 +225,74 @@ file:
       - column_definition:
           naked_identifier: avgCPA
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: amount
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: int
-              - comma: ','
-              - naked_identifier: currency
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: amount
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: int
+          - comma: ','
+          - naked_identifier: currency
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: avgCPT
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: amount
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: int
-              - comma: ','
-              - naked_identifier: currency
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: amount
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: int
+          - comma: ','
+          - naked_identifier: currency
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: avgCPM
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: amount
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: int
-              - comma: ','
-              - naked_identifier: currency
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: amount
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: int
+          - comma: ','
+          - naked_identifier: currency
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: localSpend
           data_type:
-            struct_type:
-              keyword: struct
-              struct_type_schema:
-              - start_angle_bracket: <
-              - naked_identifier: amount
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: int
-              - comma: ','
-              - naked_identifier: currency
-              - colon: ':'
-              - data_type:
-                  primitive_type:
-                    keyword: string
-              - end_angle_bracket: '>'
+          - keyword: struct
+          - start_angle_bracket: <
+          - naked_identifier: amount
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: int
+          - comma: ','
+          - naked_identifier: currency
+          - colon: ':'
+          - data_type:
+              primitive_type:
+                keyword: string
+          - end_angle_bracket: '>'
       - comma: ','
       - column_definition:
           naked_identifier: conversionRate
@@ -344,5 +326,5 @@ file:
       - keyword: BY
       - quoted_literal: "'\\n'"
     - keyword: LOCATION
-    - quoted_literal: "'s3://athena-examples-myregion/flight/csv/'"
+    - raw: "'s3://athena-examples-myregion/flight/csv/'"
   statement_terminator: ;

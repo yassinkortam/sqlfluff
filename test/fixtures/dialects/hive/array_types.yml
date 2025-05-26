@@ -3,27 +3,25 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: b78b1cf93102ddb657c8a325e81f1d304a502f3a8501d9d328880f552d4a3773
+_hash: ae7c029c61edcc47c841a14b2575a6025ddafe6b24eb425b83a25f5241c2b741
 file:
 - statement:
     select_statement:
       select_clause:
         keyword: select
         select_clause_element:
-          typed_array_literal:
-            array_type:
-              keyword: array
-            array_literal:
-            - start_square_bracket: '['
-            - column_reference:
-                naked_identifier: a
-            - comma: ','
-            - column_reference:
-                naked_identifier: b
-            - comma: ','
-            - column_reference:
-                naked_identifier: c
-            - end_square_bracket: ']'
+          array_literal:
+          - keyword: array
+          - start_square_bracket: '['
+          - column_reference:
+              naked_identifier: a
+          - comma: ','
+          - column_reference:
+              naked_identifier: b
+          - comma: ','
+          - column_reference:
+              naked_identifier: c
+          - end_square_bracket: ']'
           alias_expression:
             keyword: as
             naked_identifier: arr
@@ -54,24 +52,21 @@ file:
               function:
                 function_name:
                   function_name_identifier: unnest
-                function_contents:
-                  bracketed:
-                    start_bracket: (
-                    expression:
-                      typed_array_literal:
-                        array_type:
-                          keyword: array
-                        array_literal:
-                        - start_square_bracket: '['
-                        - numeric_literal: '1'
-                        - comma: ','
-                        - numeric_literal: '3'
-                        - comma: ','
-                        - numeric_literal: '6'
-                        - comma: ','
-                        - numeric_literal: '12'
-                        - end_square_bracket: ']'
-                    end_bracket: )
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    array_literal:
+                    - keyword: array
+                    - start_square_bracket: '['
+                    - numeric_literal: '1'
+                    - comma: ','
+                    - numeric_literal: '3'
+                    - comma: ','
+                    - numeric_literal: '6'
+                    - comma: ','
+                    - numeric_literal: '12'
+                    - end_square_bracket: ']'
+                  end_bracket: )
             alias_expression:
               keyword: as
               naked_identifier: t
@@ -89,44 +84,39 @@ file:
           function:
             function_name:
               function_name_identifier: map_from_entries
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  typed_array_literal:
-                    array_type:
-                      keyword: array
-                    array_literal:
-                    - start_square_bracket: '['
-                    - function:
-                        function_name:
-                          function_name_identifier: row
-                        function_contents:
-                          bracketed:
-                          - start_bracket: (
-                          - expression:
-                              quoted_literal: "'pending.freebet'"
-                          - comma: ','
-                          - expression:
-                              column_reference:
-                                naked_identifier: pending_fb
-                          - end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                array_literal:
+                - keyword: array
+                - start_square_bracket: '['
+                - function:
+                    function_name:
+                      function_name_identifier: row
+                    bracketed:
+                    - start_bracket: (
+                    - expression:
+                        quoted_literal: "'pending.freebet'"
                     - comma: ','
-                    - function:
-                        function_name:
-                          function_name_identifier: row
-                        function_contents:
-                          bracketed:
-                          - start_bracket: (
-                          - expression:
-                              quoted_literal: "'bonus.balance'"
-                          - comma: ','
-                          - expression:
-                              column_reference:
-                                naked_identifier: bonus
-                          - end_bracket: )
-                    - end_square_bracket: ']'
-                end_bracket: )
+                    - expression:
+                        column_reference:
+                          naked_identifier: pending_fb
+                    - end_bracket: )
+                - comma: ','
+                - function:
+                    function_name:
+                      function_name_identifier: row
+                    bracketed:
+                    - start_bracket: (
+                    - expression:
+                        quoted_literal: "'bonus.balance'"
+                    - comma: ','
+                    - expression:
+                        column_reference:
+                          naked_identifier: bonus
+                    - end_bracket: )
+                - end_square_bracket: ']'
+              end_bracket: )
       from_clause:
         keyword: from
         from_expression:
@@ -142,17 +132,15 @@ file:
       select_clause:
         keyword: select
         select_clause_element:
-          typed_array_literal:
-            array_type:
-              keyword: array
-            array_literal:
-            - start_square_bracket: '['
-            - quoted_literal: "'a'"
-            - comma: ','
-            - quoted_literal: "'b'"
-            - comma: ','
-            - quoted_literal: "'c'"
-            - end_square_bracket: ']'
+          array_literal:
+          - keyword: array
+          - start_square_bracket: '['
+          - quoted_literal: "'a'"
+          - comma: ','
+          - quoted_literal: "'b'"
+          - comma: ','
+          - quoted_literal: "'c'"
+          - end_square_bracket: ']'
           alias_expression:
             keyword: as
             naked_identifier: arr
@@ -171,15 +159,13 @@ file:
       select_clause:
         keyword: select
         select_clause_element:
-          typed_array_literal:
-            array_type:
-              keyword: array
-            array_literal:
-              start_square_bracket: '['
-              quoted_literal: "'a'"
-              comma: ','
-              null_literal: 'null'
-              end_square_bracket: ']'
+          array_literal:
+            keyword: array
+            start_square_bracket: '['
+            quoted_literal: "'a'"
+            comma: ','
+            null_literal: 'null'
+            end_square_bracket: ']'
           alias_expression:
             keyword: as
             naked_identifier: arr
@@ -198,12 +184,10 @@ file:
       select_clause:
         keyword: select
         select_clause_element:
-          typed_array_literal:
-            array_type:
-              keyword: array
-            array_literal:
-              start_square_bracket: '['
-              end_square_bracket: ']'
+          array_literal:
+            keyword: array
+            start_square_bracket: '['
+            end_square_bracket: ']'
           alias_expression:
             keyword: as
             naked_identifier: arr

@@ -1,5 +1,4 @@
 """Tests specific to the exasol dialect."""
-
 import pytest
 
 TEST_DIALECT = "exasol"

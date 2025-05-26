@@ -1,2 +1,2 @@
-[sqlfluff:rules:capitalisation.identifiers]
+[sqlfluff:rules:L014]
 capitalisation_policy = lower

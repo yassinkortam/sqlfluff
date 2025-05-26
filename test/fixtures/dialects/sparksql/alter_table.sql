@@ -55,9 +55,6 @@ ALTER TABLE Loc_Orc SET FILEFORMAT ORC;
 ALTER TABLE P1 PARTITION (Month = 2, Day = 2) SET FILEFORMAT PARQUET;
 
 -- Change the file Location
-ALTER TABLE Dbx.Tab1
-SET LOCATION '/path/to/part/ways';
-
 ALTER TABLE Dbx.Tab1 PARTITION (A = '1', B = '2')
 SET LOCATION '/path/to/part/ways';
 

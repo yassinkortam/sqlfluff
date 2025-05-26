@@ -1,11 +1,11 @@
 """Tests specific to the snowflake dialect."""
 
 import hypothesis.strategies as st
-import pytest
 from hypothesis import example, given, note, settings
+import pytest
 
+from sqlfluff.core.parser import Parser, Lexer
 from sqlfluff.core import FluffConfig
-from sqlfluff.core.parser import Lexer, Parser
 
 
 @settings(max_examples=100, deadline=None)
@@ -45,7 +45,7 @@ def test_bigquery_relational_operator_parsing(data):
 
     # Do the parse WITHOUT lots of logging
     # The logs get too long here to be useful. We should use
-    # specific segment tests if we want to debug logs.
+    # specfic segment tests if we want to debug logs.
     parsed = Parser(config=config).parse(tokens)
     print(f"Post-parse structure: {parsed.to_tuple(show_raw=True)}")
     print(f"Post-parse structure: {parsed.stringify()}")

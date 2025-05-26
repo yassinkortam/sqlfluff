@@ -1,26 +1,21 @@
 """Surrogate class for working with TemplatedFileSlice collections."""
-
 from typing import Callable, Optional
 
-from sqlfluff.core.templaters.base import TemplatedFile, TemplatedFileSlice
+from sqlfluff.core.templaters.base import TemplatedFileSlice, TemplatedFile
 
 
-class TemplatedFileSlices(tuple[TemplatedFileSlice, ...]):
+class TemplatedFileSlices(tuple):
     """Encapsulates a sequence of one or more TemplatedFileSlice.
 
     The slices may or may not be contiguous in a file.
     Provides useful operations on a sequence of slices to simplify rule creation.
     """
 
-    def __new__(
-        cls,
-        *templated_slices: TemplatedFileSlice,
-        templated_file: Optional[TemplatedFile] = None,
-    ) -> "TemplatedFileSlices":
+    def __new__(cls, *templated_slices, templated_file=None):
         """Override new operator."""
-        return super().__new__(cls, templated_slices)
+        return super(TemplatedFileSlices, cls).__new__(cls, templated_slices)
 
-    def __init__(self, *_: TemplatedFileSlice, templated_file: TemplatedFile) -> None:
+    def __init__(self, *_: TemplatedFileSlice, templated_file: TemplatedFile):
         self.templated_file = templated_file
 
     def all(

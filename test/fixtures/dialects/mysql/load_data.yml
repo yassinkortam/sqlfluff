@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 0f068e4f34b1a5b03afb39dd77f1cf1dfdaa97fefef25d35dbd6c3e7288ed55b
+_hash: 43ac195d144b262728a8d04751851aab3a843cadc9ab23a1cb316486872a093b
 file:
 - statement:
     load_data_statement:
@@ -39,26 +39,6 @@ file:
       - naked_identifier: db2
       - dot: .
       - naked_identifier: my_table
-- statement_terminator: ;
-- statement:
-    load_data_statement:
-    - keyword: LOAD
-    - keyword: DATA
-    - keyword: INFILE
-    - quoted_literal: "'data.txt'"
-    - keyword: INTO
-    - keyword: TABLE
-    - table_reference:
-      - naked_identifier: db2
-      - dot: .
-      - naked_identifier: my_table
-    - partition_clause:
-        keyword: PARTITION
-        bracketed:
-          start_bracket: (
-          object_reference:
-            naked_identifier: partition_name
-          end_bracket: )
 - statement_terminator: ;
 - statement:
     load_data_statement:
@@ -206,7 +186,8 @@ file:
         naked_identifier: column2
     - comparison_operator:
         raw_comparison_operator: '='
-    - variable: '@var1'
+    - column_reference:
+        variable: '@var1'
     - binary_operator: /
     - numeric_literal: '100'
 - statement_terminator: ;

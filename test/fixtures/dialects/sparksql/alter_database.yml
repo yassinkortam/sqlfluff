@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: a8aafb289a530d36bd48e8ddfaac798d58e539a2b74f5fa586873092693017ae
+_hash: ac38d2239b9a4d6f5bfbca9f35cabd66d1cc1f2dded465f7773b63f14469a8f9
 file:
 - statement:
     alter_database_statement:
@@ -84,24 +84,4 @@ file:
           raw_comparison_operator: '='
       - quoted_literal: "'01/01/2001'"
       - end_bracket: )
-- statement_terminator: ;
-- statement:
-    alter_database_statement:
-    - keyword: ALTER
-    - keyword: DATABASE
-    - database_reference:
-        naked_identifier: inventory
-    - keyword: SET
-    - keyword: LOCATION
-    - quoted_literal: "'file:/temp/spark-warehouse/new_inventory.db'"
-- statement_terminator: ;
-- statement:
-    alter_database_statement:
-    - keyword: ALTER
-    - keyword: SCHEMA
-    - database_reference:
-        naked_identifier: inventory
-    - keyword: SET
-    - keyword: LOCATION
-    - quoted_literal: "'file:/temp/spark-warehouse/new_inventory.db'"
 - statement_terminator: ;

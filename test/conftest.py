@@ -1,28 +1,25 @@
 """Common Test Fixtures."""
-
 import hashlib
 import io
 import os
-from typing import NamedTuple
 
 import pytest
 import yaml
-from yaml import CDumper, CLoader
 
 from sqlfluff.cli.commands import quoted_presenter
 from sqlfluff.core import FluffConfig
 from sqlfluff.core.linter import Linter
-from sqlfluff.core.parser import Lexer, Parser
+from sqlfluff.core.parser import Parser, Lexer
 from sqlfluff.core.parser.markers import PositionMarker
 from sqlfluff.core.parser.segments import (
-    BaseSegment,
-    CodeSegment,
-    CommentSegment,
-    Dedent,
     Indent,
+    Dedent,
+    WhitespaceSegment,
     NewlineSegment,
     SymbolSegment,
-    WhitespaceSegment,
+    CommentSegment,
+    CodeSegment,
+    BaseSegment,
 )
 from sqlfluff.core.rules import BaseRule
 from sqlfluff.core.templaters import TemplatedFile
@@ -31,16 +28,7 @@ from sqlfluff.core.templaters import TemplatedFile
 yaml.add_representer(str, quoted_presenter)
 
 
-class ParseExample(NamedTuple):
-    """A tuple representing an example SQL file to parse."""
-
-    dialect: str
-    sqlfile: str
-
-
-def get_parse_fixtures(
-    fail_on_missing_yml=False,
-) -> tuple[list[ParseExample], list[tuple[str, str, bool, str]]]:
+def get_parse_fixtures(fail_on_missing_yml=False):
     """Search for all parsing fixtures."""
     parse_success_examples = []
     parse_structure_examples = []
@@ -56,7 +44,7 @@ def get_parse_fixtures(
             if f.endswith(".sql"):
                 root = f[:-4]
                 # only look for sql files
-                parse_success_examples.append(ParseExample(d, f))
+                parse_success_examples.append((d, f))
                 # Look for the code_only version of the structure
                 y = root + ".yml"
                 if y in dirlist:
@@ -84,7 +72,7 @@ def make_dialect_path(dialect, fname):
 
 def load_file(dialect, fname):
     """Load a file."""
-    with open(make_dialect_path(dialect, fname), encoding="utf8") as f:
+    with open(make_dialect_path(dialect, fname)) as f:
         raw = f.read()
     return raw
 
@@ -94,9 +82,6 @@ def process_struct(obj):
     if isinstance(obj, dict):
         return tuple((k, process_struct(obj[k])) for k in obj)
     elif isinstance(obj, list):
-        # If empty list, return empty tuple
-        if not len(obj):
-            return tuple()
         # We'll assume that it's a list of dicts
         if isinstance(obj[0], dict):
             buff = [process_struct(elem) for elem in obj]
@@ -120,7 +105,7 @@ def parse_example_file(dialect: str, sqlfile: str):
     raw = load_file(dialect, sqlfile)
     # Lex and parse the file
     tokens, _ = Lexer(config=config).lex(raw)
-    tree = Parser(config=config).parse(tokens, fname=dialect + "/" + sqlfile)
+    tree = Parser(config=config).parse(tokens)
     return tree
 
 
@@ -130,7 +115,7 @@ def compute_parse_tree_hash(tree):
         r = tree.as_record(code_only=True, show_raw=True)
         if r:
             r_io = io.StringIO()
-            yaml.dump(r, r_io, sort_keys=False, allow_unicode=True, Dumper=CDumper)
+            yaml.dump(r, r_io, sort_keys=False)
             result = hashlib.blake2s(r_io.getvalue().encode("utf-8")).hexdigest()
             return result
     return None
@@ -139,10 +124,10 @@ def compute_parse_tree_hash(tree):
 def load_yaml(fpath):
     """Load a yaml structure and process it into a tuple."""
     # Load raw file
-    with open(fpath, encoding="utf8") as f:
+    with open(fpath) as f:
         raw = f.read()
     # Parse the yaml
-    obj = yaml.load(raw, Loader=CLoader)
+    obj = yaml.safe_load(raw)
     # Return the parsed and structured object
     _hash = None
     if obj:
@@ -161,76 +146,6 @@ def yaml_loader():
     return load_yaml
 
 
-def _generate_test_segments_func(elems):
-    """Roughly generate test segments.
-
-    This function isn't totally robust, but good enough
-    for testing. Use with caution.
-    """
-    buff = []
-    raw_file = "".join(elems)
-    templated_file = TemplatedFile.from_string(raw_file)
-    idx = 0
-
-    for elem in elems:
-        if elem == "<indent>":
-            buff.append(
-                Indent(pos_marker=PositionMarker.from_point(idx, idx, templated_file))
-            )
-            continue
-        elif elem == "<dedent>":
-            buff.append(
-                Dedent(pos_marker=PositionMarker.from_point(idx, idx, templated_file))
-            )
-            continue
-
-        seg_kwargs = {}
-
-        if set(elem) <= {" ", "\t"}:
-            SegClass = WhitespaceSegment
-        elif set(elem) <= {"\n"}:
-            SegClass = NewlineSegment
-        elif elem == "(":
-            SegClass = SymbolSegment
-            seg_kwargs = {"instance_types": ("start_bracket",)}
-        elif elem == ")":
-            SegClass = SymbolSegment
-            seg_kwargs = {"instance_types": ("end_bracket",)}
-        elif elem == "[":
-            SegClass = SymbolSegment
-            seg_kwargs = {"instance_types": ("start_square_bracket",)}
-        elif elem == "]":
-            SegClass = SymbolSegment
-            seg_kwargs = {"instance_types": ("end_square_bracket",)}
-        elif elem.startswith("--"):
-            SegClass = CommentSegment
-            seg_kwargs = {"instance_types": ("inline_comment",)}
-        elif elem.startswith('"'):
-            SegClass = CodeSegment
-            seg_kwargs = {"instance_types": ("double_quote",)}
-        elif elem.startswith("'"):
-            SegClass = CodeSegment
-            seg_kwargs = {"instance_types": ("single_quote",)}
-        else:
-            SegClass = CodeSegment
-
-        # Set a none position marker which we'll realign at the end.
-        buff.append(
-            SegClass(
-                raw=elem,
-                pos_marker=PositionMarker(
-                    slice(idx, idx + len(elem)),
-                    slice(idx, idx + len(elem)),
-                    templated_file,
-                ),
-                **seg_kwargs,
-            )
-        )
-        idx += len(elem)
-
-    return tuple(buff)
-
-
 @pytest.fixture(scope="module")
 def generate_test_segments():
     """Roughly generate test segments.
@@ -239,7 +154,76 @@ def generate_test_segments():
     but when actually used, this will return the inner function
     which is what you actually need.
     """
-    return _generate_test_segments_func
+
+    def generate_test_segments_func(elems):
+        """Roughly generate test segments.
+
+        This function isn't totally robust, but good enough
+        for testing. Use with caution.
+        """
+        buff = []
+        raw_file = "".join(elems)
+        templated_file = TemplatedFile.from_string(raw_file)
+        idx = 0
+
+        for elem in elems:
+            if elem == "<indent>":
+                buff.append(
+                    Indent(
+                        pos_marker=PositionMarker.from_point(idx, idx, templated_file)
+                    )
+                )
+                continue
+            elif elem == "<dedent>":
+                buff.append(
+                    Dedent(
+                        pos_marker=PositionMarker.from_point(idx, idx, templated_file)
+                    )
+                )
+                continue
+
+            seg_kwargs = {}
+
+            if set(elem) <= {" ", "\t"}:
+                SegClass = WhitespaceSegment
+            elif set(elem) <= {"\n"}:
+                SegClass = NewlineSegment
+            elif elem == "(":
+                SegClass = SymbolSegment
+                seg_kwargs = {"type": "bracket_open"}
+            elif elem == ")":
+                SegClass = SymbolSegment
+                seg_kwargs = {"type": "bracket_close"}
+            elif elem.startswith("--"):
+                SegClass = CommentSegment
+                seg_kwargs = {"type": "inline_comment"}
+            elif elem.startswith('"'):
+                SegClass = CodeSegment
+                seg_kwargs = {"type": "double_quote"}
+            elif elem.startswith("'"):
+                SegClass = CodeSegment
+                seg_kwargs = {"type": "single_quote"}
+            else:
+                SegClass = CodeSegment
+
+            # Set a none position marker which we'll realign at the end.
+            buff.append(
+                SegClass(
+                    raw=elem,
+                    pos_marker=PositionMarker(
+                        slice(idx, idx + len(elem)),
+                        slice(idx, idx + len(elem)),
+                        templated_file,
+                    ),
+                    **seg_kwargs,
+                )
+            )
+            idx += len(elem)
+
+        return tuple(buff)
+
+    # Return the function
+    return generate_test_segments_func
 
 
 @pytest.fixture
@@ -285,20 +269,3 @@ def fail_on_parse_error_after_fix(monkeypatch):
         "_report_conflicting_fixes_same_anchor",
         raise_error_conflicting_fixes_same_anchor,
     )
-
-
-@pytest.fixture(autouse=True)
-def test_verbosity_level(request):
-    """Report the verbosity level for a given pytest run.
-
-    For example:
-
-    $ pytest -vv
-    Has a verbosity level of 2
-
-    While:
-
-    $ pytest
-    Has a verbosity level of 0
-    """
-    return request.config.getoption("verbose")

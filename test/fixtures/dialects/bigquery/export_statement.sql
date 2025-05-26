@@ -30,14 +30,6 @@ EXPORT DATA OPTIONS(
 SELECT field1, field2 FROM mydataset.table1 ORDER BY field1 LIMIT 10;
 
 EXPORT DATA OPTIONS(
-  uri="gs://bucket/folder/*.csv",
-  format="CSV",
-  overwrite=true,
-  header=true,
-  field_delimiter=';') AS
-SELECT field1, field2 FROM mydataset.table1 ORDER BY field1 LIMIT 10;
-
-EXPORT DATA OPTIONS(
   uri='gs://bucket/folder/*',
   format='AVRO',
   compression='SNAPPY') AS
@@ -63,11 +55,3 @@ WITH cte AS (
 )
 SELECT *
 FROM cte;
-
-EXPORT DATA OPTIONS
-(uri=CONCAT("gs://bucket/","/file_*.csv"),
-  format='CSV',
-  overwrite=true,
-  header=true,
-  field_delimiter=',')
-as SELECT col1,col2 FROM thetable;

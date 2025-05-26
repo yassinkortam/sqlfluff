@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 1cf2fa20405c5edb61dd833d223e97fc1944d8b96a3b5135d0b455ffd33f21e8
+_hash: b75326dd391b69165d78a89558a7359b26a2066fce03823648592d3ded367fb5
 file:
 - statement:
     select_statement:
@@ -79,9 +79,9 @@ file:
       from_clause:
         keyword: from
         from_expression:
-          bracketed:
-            start_bracket: (
-            from_expression_element:
+          from_expression_element:
+            bracketed:
+              start_bracket: (
               table_expression:
                 values_clause:
                 - keyword: values
@@ -93,7 +93,7 @@ file:
                 - comma: ','
                 - expression:
                     numeric_literal: '3'
-            end_bracket: )
+              end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -106,9 +106,9 @@ file:
       from_clause:
         keyword: from
         from_expression:
-          bracketed:
-            start_bracket: (
-            from_expression_element:
+          from_expression_element:
+            bracketed:
+              start_bracket: (
               table_expression:
                 values_clause:
                 - keyword: values
@@ -129,7 +129,7 @@ file:
                     expression:
                       numeric_literal: '3'
                     end_bracket: )
-            end_bracket: )
+              end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -142,9 +142,9 @@ file:
       from_clause:
         keyword: from
         from_expression:
-          bracketed:
-            start_bracket: (
-            from_expression_element:
+          from_expression_element:
+            bracketed:
+              start_bracket: (
               table_expression:
                 values_clause:
                 - keyword: values
@@ -165,7 +165,7 @@ file:
                   - expression:
                       numeric_literal: '4'
                   - end_bracket: )
-            end_bracket: )
+              end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -204,9 +204,9 @@ file:
       from_clause:
       - keyword: from
       - from_expression:
-          bracketed:
-            start_bracket: (
-            from_expression_element:
+          from_expression_element:
+            bracketed:
+              start_bracket: (
               table_expression:
                 values_clause:
                 - keyword: values
@@ -227,12 +227,12 @@ file:
                   - expression:
                       numeric_literal: '4'
                   - end_bracket: )
-            end_bracket: )
+              end_bracket: )
       - comma: ','
       - from_expression:
-          bracketed:
-            start_bracket: (
-            from_expression_element:
+          from_expression_element:
+            bracketed:
+              start_bracket: (
               table_expression:
                 values_clause:
                 - keyword: values
@@ -253,7 +253,7 @@ file:
                   - expression:
                       numeric_literal: '4'
                   - end_bracket: )
-            end_bracket: )
+              end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -266,9 +266,9 @@ file:
       from_clause:
         keyword: from
         from_expression:
-          bracketed:
-            start_bracket: (
-            from_expression_element:
+          from_expression_element:
+            bracketed:
+              start_bracket: (
               table_expression:
                 values_clause:
                 - keyword: values
@@ -279,30 +279,28 @@ file:
                     function:
                       function_name:
                         function_name_identifier: least
-                      function_contents:
-                        bracketed:
-                        - start_bracket: (
-                        - expression:
-                            numeric_literal: '2'
-                        - comma: ','
-                        - expression:
-                            numeric_literal: '3'
-                        - end_bracket: )
+                      bracketed:
+                      - start_bracket: (
+                      - expression:
+                          numeric_literal: '2'
+                      - comma: ','
+                      - expression:
+                          numeric_literal: '3'
+                      - end_bracket: )
                 - comma: ','
                 - expression:
                     function:
                       function_name:
                         function_name_identifier: greatest
-                      function_contents:
-                        bracketed:
-                        - start_bracket: (
-                        - expression:
-                            numeric_literal: '4'
-                        - comma: ','
-                        - expression:
-                            numeric_literal: '5'
-                        - end_bracket: )
-            end_bracket: )
+                      bracketed:
+                      - start_bracket: (
+                      - expression:
+                          numeric_literal: '4'
+                      - comma: ','
+                      - expression:
+                          numeric_literal: '5'
+                      - end_bracket: )
+              end_bracket: )
 - statement_terminator: ;
 - statement:
     select_statement:
@@ -736,25 +734,4 @@ file:
               - comma: ','
               - expression:
                   numeric_literal: '4'
-- statement_terminator: ;
-- statement:
-    select_statement:
-      select_clause:
-        keyword: select
-        select_clause_element:
-          expression:
-          - numeric_literal: '1'
-          - binary_operator: +
-          - numeric_literal: '2'
-          - comparison_operator: ==
-          - numeric_literal: '3'
-      from_clause:
-        keyword: from
-        from_expression:
-          from_expression_element:
-            table_expression:
-              values_clause:
-                keyword: values
-                expression:
-                  numeric_literal: '1'
 - statement_terminator: ;

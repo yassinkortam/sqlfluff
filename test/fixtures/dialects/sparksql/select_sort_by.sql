@@ -132,6 +132,3 @@ FROM person
 GROUP BY age
 HAVING COUNT(age) > 1
 SORT BY age;
-
-SELECT CURRENT_DATE() AS p_data_date
-SORT BY p_data_date;

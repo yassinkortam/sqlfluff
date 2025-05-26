@@ -2,9 +2,7 @@
 
 import sys
 import textwrap
-from collections import abc
-from functools import cached_property
-from typing import Any, Callable
+from typing import Dict, List
 
 from sqlfluff import __version__ as pkg_version
 
@@ -27,14 +25,14 @@ def get_package_version() -> str:
     return pkg_version
 
 
-def wrap_elem(s: str, width: int) -> list[str]:
+def wrap_elem(s: str, width: int) -> List[str]:
     """Wrap a string into a list of strings all less than <width>."""
     return textwrap.wrap(s, width=width)
 
 
 def wrap_field(
     label: str, val: str, width: int, max_label_width: int = 10, sep_char: str = ": "
-) -> dict[str, Any]:
+) -> Dict:
     """Wrap a field (label, val).
 
     Returns:
@@ -49,10 +47,7 @@ def wrap_field(
         label_list = [label]
 
     max_val_width = width - len(sep_char) - label_width
-    val_list = []
-    for v in val.split("\n"):
-        val_list.extend(wrap_elem(v, width=max_val_width))
-
+    val_list = wrap_elem(val, width=max_val_width)
     return dict(
         label_list=label_list,
         val_list=val_list,
@@ -74,25 +69,3 @@ def pad_line(s: str, width: int, align: str = "left") -> str:
         return (" " * gap) + s
     else:
         raise ValueError(f"Unknown alignment: {align}")  # pragma: no cover
-
-
-class LazySequence(abc.Sequence):
-    """A Sequence which only populates on the first access.
-
-    This is useful for being able to define sequences within
-    the click cli decorators, but that don't trigger their
-    contents until first called.
-    """
-
-    def __init__(self, getter=Callable[[], abc.Sequence]):
-        self._getter = getter
-
-    @cached_property
-    def _sequence(self) -> abc.Sequence:
-        return self._getter()
-
-    def __getitem__(self, key):
-        return self._sequence[key]
-
-    def __len__(self):
-        return len(self._sequence)

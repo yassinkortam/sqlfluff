@@ -1,33 +1,16 @@
 """Dataclasses for reflow work."""
 
-import logging
-from collections.abc import Sequence
-from dataclasses import dataclass, field
 from itertools import chain
-from typing import Optional, Union, cast
+import logging
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Sequence, Set, Tuple, Type, cast
 
-from sqlfluff.core.helpers.slice import slice_overlaps
-from sqlfluff.core.parser import PositionMarker
-from sqlfluff.core.parser.segments import (
-    BaseSegment,
-    Indent,
-    NewlineSegment,
-    RawSegment,
-    SourceFix,
-    TemplateSegment,
-    WhitespaceSegment,
-)
-from sqlfluff.core.rules import LintFix, LintResult
+from sqlfluff.core.parser import BaseSegment, RawSegment
+from sqlfluff.core.parser.segments.raw import NewlineSegment, WhitespaceSegment
+from sqlfluff.core.rules.base import LintFix
+
 from sqlfluff.utils.reflow.config import ReflowConfig
 from sqlfluff.utils.reflow.depthmap import DepthInfo
-
-# Respace Algorithms
-from sqlfluff.utils.reflow.respace import (
-    determine_constraints,
-    handle_respace__inline_with_space,
-    handle_respace__inline_without_space,
-    process_spacing,
-)
 
 # We're in the utils module, but users will expect reflow
 # logs to appear in the context of rules. Hence it's a subset
@@ -35,155 +18,74 @@ from sqlfluff.utils.reflow.respace import (
 reflow_logger = logging.getLogger("sqlfluff.rules.reflow")
 
 
-def get_consumed_whitespace(segment: Optional[RawSegment]) -> Optional[str]:
-    """A helper function to extract possible consumed whitespace.
-
-    Args:
-        segment (:obj:`RawSegment`, optional): A segment to test for
-            suitability and extract the source representation of if
-            appropriate. If passed None, then returns None.
-
-    Returns:
-        Returns the :code:`source_str` if the segment is of type
-        :code:`placeholder` and has a :code:`block_type` of
-        :code:`literal`. Otherwise None.
-    """
-    if not segment or not segment.is_type("placeholder"):
-        return None
-    placeholder = cast(TemplateSegment, segment)
-    if placeholder.block_type != "literal":
-        return None
-    return placeholder.source_str
-
-
 @dataclass(frozen=True)
 class ReflowElement:
     """Base reflow element class."""
 
-    segments: tuple[RawSegment, ...]
+    segments: Tuple[RawSegment, ...]
 
     @staticmethod
-    def _class_types(segments: Sequence[RawSegment]) -> set[str]:
+    def _class_types(segments: Sequence[RawSegment]) -> Set[str]:
         return set(chain.from_iterable(seg.class_types for seg in segments))
 
     @property
-    def class_types(self) -> set[str]:
-        """Get the set of contained class types.
+    def class_types(self):
+        """The set of contained class types.
 
-        Parallel to `BaseSegment.class_types`
+        Parallel to BaseSegment.class_types
         """
         return self._class_types(self.segments)
 
     @property
-    def raw(self) -> str:
+    def raw(self):
         """Get the current raw representation."""
         return "".join(seg.raw for seg in self.segments)
 
-    @property
-    def pos_marker(self) -> Optional[PositionMarker]:
-        """Get the first position marker of the element."""
-        for seg in self.segments:
-            if seg.pos_marker:
-                return seg.pos_marker
-        return None
-
     def num_newlines(self) -> int:
-        """Return the number of newlines in this element.
-
-        These newlines are either newline segments or contained
-        within consumed sections of whitespace. This counts
-        both.
-        """
-        return sum(
-            bool("newline" in seg.class_types)
-            + (get_consumed_whitespace(seg) or "").count("\n")
-            for seg in self.segments
-        )
-
-    def is_all_unrendered(self) -> bool:
-        """Return whether this element is all unrendered.
-
-        Returns True if contains only whitespace, indents, template loops
-        or placeholders.
-
-        Note:
-        * ReflowBlocks will contain the placeholders and loops
-        * ReflowPoints will contain whitespace, indents and newlines.
-        """
-        for seg in self.segments:
-            if not seg.is_type(
-                "whitespace", "placeholder", "newline", "indent", "template_loop"
-            ):
-                return False
-        return True
+        """How many newlines does this element contain?"""
+        return sum(bool("newline" in seg.class_types) for seg in self.segments)
 
 
 @dataclass(frozen=True)
 class ReflowBlock(ReflowElement):
     """Class for keeping track of elements to reflow.
 
-    This class, and its sibling :obj:`ReflowPoint`, should not
-    normally be manipulated directly by rules, but instead should
-    be manipulated using :obj:`ReflowSequence`.
-
     It holds segments to reflow and also exposes configuration
-    regarding how they are expected to reflow around others. Typically
-    it holds only a single element, which is usually code or a
-    templated element. Because reflow operations control spacing,
-    it would be very unusual for this object to be modified; as
-    such it exposes relatively few methods.
+    around how they are expected to reflow around others.
 
     The attributes exposed are designed to be "post configuration"
     i.e. they should reflect configuration appropriately.
+
+    NOTE: These are the smallest unit of "work" within
+    the reflow methods, and may contain meta segments.
     """
 
-    #: Desired spacing before this block.
-    #: See :ref:`layoutspacingconfig`
+    # Options for spacing rules are:
+    # - single:         the default (one single space)
+    # - touch:          no whitespace
+    # - any:            don't enforce any spacing rules
     spacing_before: str
-    #: Desired spacing after this block.
-    #: See :ref:`layoutspacingconfig`
     spacing_after: str
-    #: Desired line position for this block.
-    #: See :ref:`layoutspacingconfig`
+    # - None:           the default (no particular preference)
+    # - leading:        prefer newline before
+    # - trailing:       prefer newline after
     line_position: Optional[str]
-    #: Metadata on the depth of this segment within the parse tree
-    #: which is used in inferring how and where line breaks should
-    #: exist.
+    # The depth info is used in determining where to put line breaks.
     depth_info: DepthInfo
-    #: Desired spacing configurations for parent segments
-    #: of the segment in this block.
-    #: See :ref:`layoutspacingconfig`
-    stack_spacing_configs: dict[int, str]
-    #: Desired line position configurations for parent segments
-    #: of the segment in this block.
-    #: See :ref:`layoutspacingconfig`
-    line_position_configs: dict[int, str]
-    #: Desired line position for this block's keywords.
-    #: See :ref:`layoutspacingconfig`
-    keyword_line_position: Optional[str]
-    #: Desired keyword line position configurations for parent segments
-    #: of the segment in this block.
-    #: See :ref:`layoutspacingconfig`
-    keyword_line_position_configs: dict[int, str]
+    # This stores relevant configs for segments in the stack.
+    stack_spacing_configs: Dict[int, str]
+    line_position_configs: Dict[int, str]
 
     @classmethod
     def from_config(
-        cls: type["ReflowBlock"],
-        segments: tuple[RawSegment, ...],
-        config: ReflowConfig,
-        depth_info: DepthInfo,
+        cls: Type["ReflowBlock"], segments, config: ReflowConfig, depth_info: DepthInfo
     ) -> "ReflowBlock":
-        """Construct a ReflowBlock while extracting relevant configuration.
-
-        This is the primary route to construct a ReflowBlock, as
-        is allows all of the inference of the spacing and position
-        configuration from the segments it contains and the
-        appropriate config objects.
-        """
+        """Extendable constructor which accepts config."""
         block_config = config.get_block_config(cls._class_types(segments), depth_info)
+        # Populate any spacing_within config.
+        # TODO: This needs decent unit tests - not just what happens in rules.
         stack_spacing_configs = {}
         line_position_configs = {}
-        keyword_line_position_configs = {}
         for hash, class_types in zip(
             depth_info.stack_hashes, depth_info.stack_class_types
         ):
@@ -192,8 +94,6 @@ class ReflowBlock(ReflowElement):
                 stack_spacing_configs[hash] = cfg.spacing_within
             if cfg.line_position:
                 line_position_configs[hash] = cfg.line_position
-            if cfg.keyword_line_position:
-                keyword_line_position_configs[hash] = cfg.keyword_line_position
         return cls(
             segments=segments,
             spacing_before=block_config.spacing_before,
@@ -202,217 +102,456 @@ class ReflowBlock(ReflowElement):
             depth_info=depth_info,
             stack_spacing_configs=stack_spacing_configs,
             line_position_configs=line_position_configs,
-            keyword_line_position=block_config.keyword_line_position,
-            keyword_line_position_configs=keyword_line_position_configs,
         )
-
-
-def _indent_description(indent: str) -> str:
-    """Construct a human readable description of the indent.
-
-    NOTE: We operate assuming that the "correct" indent is
-    never a mix of tabs and spaces. That means if the provided
-    indent *does* contain both that this description is likely
-    a case where we are matching a pre-existing indent, and can
-    assume that the *description* of that indent is non-critical.
-    To handle that situation gracefully we just return "Mixed Indent".
-
-    See: https://github.com/sqlfluff/sqlfluff/issues/4255
-    """
-    if indent == "":
-        return "no indent"
-    elif " " in indent and "\t" in indent:
-        return "mixed indent"
-    elif indent[0] == " ":
-        assert all(c == " " for c in indent)
-        return f"indent of {len(indent)} spaces"
-    elif indent[0] == "\t":  # pragma: no cover
-        assert all(c == "\t" for c in indent)
-        return f"indent of {len(indent)} tabs"
-    else:  # pragma: no cover
-        raise NotImplementedError(f"Invalid indent construction: {indent!r}")
 
 
 @dataclass(frozen=True)
-class IndentStats:
-    """Dataclass to hold summary of indents in a point.
-
-    Attributes:
-        impulse (int): The net change when summing the impulses
-            of all the consecutive indent or dedent segments in
-            a point.
-        trough (int): The lowest point reached when summing the
-            impulses (in order) of all the consecutive indent or
-            dedent segments in a point.
-        implicit_indents (tuple of int): The indent balance
-            corresponding to any detected (and enabled) implicit
-            indents. This follows the usual convention that indents
-            are identified by their "uphill" side. A positive indent
-            is identified by the indent balance _after_ and a negative
-            indent is identified by the indent balance _before_.
-    """
-
-    impulse: int
-    trough: int
-    # Defaults to an empty tuple if unset.
-    implicit_indents: tuple[int, ...] = ()
-
-    @classmethod
-    def from_combination(
-        cls, first: Optional["IndentStats"], second: "IndentStats"
-    ) -> "IndentStats":
-        """Create IndentStats from two consecutive IndentStats.
-
-        This is mostly used for combining the effects of indent and dedent
-        tokens either side of a comment.
-
-        NOTE: The *first* is considered optional, because if we're
-        calling this function, we're assuming that there's always
-        a second.
-        """
-        # First check for the trivial case that we only have one.
-        if not first:
-            return second
-
-        # Otherwise, combine the two into one.
-        return cls(
-            first.impulse + second.impulse,
-            min(first.trough, first.impulse + second.trough),
-            second.implicit_indents,
-        )
-
-
-@dataclass(frozen=True, init=False)
 class ReflowPoint(ReflowElement):
     """Class for keeping track of editable elements in reflow.
 
-    This class, and its sibling :obj:`ReflowBlock`, should not
-    normally be manipulated directly by rules, but instead should
-    be manipulated using :obj:`ReflowSequence`.
-
     It holds segments which can be changed during a reflow operation
-    such as whitespace and newlines.It may also contain :obj:`Indent`
-    and :obj:`Dedent` elements.
+    such as whitespace and newlines.
 
-    It holds no configuration and is influenced by the blocks on either
-    side, so that any operations on it usually have that configuration
-    passed in as required.
+    It holds no configuration and is influenced by the blocks either
+    side.
     """
 
-    _stats: IndentStats = field(init=False)
+    @staticmethod
+    def _determine_constraints(
+        prev_block: Optional[ReflowBlock],
+        next_block: Optional[ReflowBlock],
+        strip_newlines: bool = False,
+    ) -> Tuple[str, str, bool]:
+        """Given the surrounding blocks, determine appropriate constraints."""
+        # Start with the defaults.
+        pre_constraint = prev_block.spacing_after if prev_block else "single"
+        post_constraint = next_block.spacing_before if next_block else "single"
 
-    def __init__(self, segments: tuple[RawSegment, ...]):
-        """Override the init method to calculate indent stats."""
-        object.__setattr__(self, "segments", segments)
-        object.__setattr__(self, "_stats", self._generate_indent_stats(segments))
+        # Work out the common parent segment and depth
+        if prev_block and next_block:
+            common = prev_block.depth_info.common_with(next_block.depth_info)
+            # Just check the most immediate parent for now for speed.
+            # TODO: Review whether just checking the parent is enough.
+            # NOTE: spacing configs will be available on both sides if they're common
+            # so it doesn't matter whether we get it from prev_block or next_block.
+            within_constraint = prev_block.stack_spacing_configs.get(common[-1], None)
+            if not within_constraint:
+                pass
+            elif within_constraint in ("touch", "inline"):
+                # NOTE: inline is actually a more extreme version of "touch".
+                # Examples:
+                # - "inline" would be used with an object reference, where the
+                #   parts have to all be together on one line like `a.b.c`.
+                # - "touch" would allow the above layout, _but also_ allow an
+                #   an optional line break between, much like between an opening
+                #   bracket and the following element: `(a)` or:
+                #   ```
+                #   (
+                #       a
+                #   )
+                #   ```
+                if within_constraint == "inline":
+                    # If they are then strip newlines.
+                    strip_newlines = True
+                # If segments are expected to be touch within. Then modify
+                # constraints accordingly.
+                # NOTE: We don't override if it's already "any"
+                if pre_constraint != "any":
+                    pre_constraint = "touch"
+                if post_constraint != "any":
+                    post_constraint = "touch"
+            else:  # pragma: no cover
+                idx = prev_block.depth_info.stack_hashes.index(common[-1])
+                raise NotImplementedError(
+                    f"Unexpected within constraint: {within_constraint} for "
+                    f"{prev_block.depth_info.stack_class_types[idx]}"
+                )
+
+        return pre_constraint, post_constraint, strip_newlines
+
+    @staticmethod
+    def _process_spacing(
+        segment_buffer: List[RawSegment], strip_newlines: bool = False
+    ) -> Tuple[List[RawSegment], Optional[RawSegment], List[LintFix]]:
+        """Given the existing spacing, extract information and do basic pruning."""
+        removal_buffer: List[RawSegment] = []
+        last_whitespace: List[RawSegment] = []
+
+        # Loop through the existing segments looking for spacing.
+        for seg in segment_buffer:
+
+            # If it's whitespace, store it.
+            if seg.is_type("whitespace"):
+                last_whitespace.append(seg)
+
+            # If it's a newline, react accordingly.
+            elif seg.is_type("newline", "end_of_file"):
+
+                # Are we stripping newlines?
+                if strip_newlines and seg.is_type("newline"):
+                    reflow_logger.debug("    Stripping newline: %s", seg)
+                    removal_buffer.append(seg)
+                    # Carry on as though it wasn't here.
+                    continue
+
+                # Check if we've just passed whitespace. If we have, remove it
+                # as trailing whitespace, both from the buffer and create a fix.
+                if last_whitespace:
+                    reflow_logger.debug("    Removing trailing whitespace.")
+                    for ws in last_whitespace:
+                        removal_buffer.append(ws)
+
+                # Regardless, unset last_whitespace.
+                # We either just deleted it, or it's not relevant for any future
+                # segments.
+                last_whitespace = []
+
+        if len(last_whitespace) >= 2:
+            reflow_logger.debug("   Removing adjoining whitespace.")
+            # If we find multiple sequential whitespaces, it's the sign
+            # that we've removed something. Only the first one should be
+            # a valid indent (or the one we consider for constraints).
+            # Remove all the following ones.
+            for ws in last_whitespace[1:]:
+                removal_buffer.append(ws)
+
+        # Turn the removal buffer updated segment buffer, last whitespace
+        # and associated fixes.
+        return (
+            [s for s in segment_buffer if s not in removal_buffer],
+            # We should have removed all other whitespace by now.
+            last_whitespace[0] if last_whitespace else None,
+            [LintFix.delete(s) for s in removal_buffer],
+        )
+
+    @staticmethod
+    def _determine_aligned_inline_spacing(
+        root_segment: BaseSegment,
+        whitespace_seg: RawSegment,
+        next_seg: RawSegment,
+        segment_type: str,
+        align_within: Optional[str],
+        align_boundary: Optional[str],
+    ) -> str:
+        """Work out spacing for instance of an `align` constraint."""
+        # Find the level of segment that we're aligning.
+        # NOTE: Reverse slice
+        parent_segment = None
+        for ps in root_segment.path_to(next_seg)[::-1]:
+            if ps.segment.is_type(align_within):
+                parent_segment = ps.segment
+            if ps.segment.is_type(align_boundary):
+                break
+
+        if not parent_segment:
+            reflow_logger.debug(
+                "    No Parent found for alignment case. Treat as single."
+            )
+            return " "
+
+        # We've got a parent. Find some siblings.
+        reflow_logger.debug("    Determining alignment within: %s", parent_segment)
+        siblings = []
+        for sibling in parent_segment.recursive_crawl(segment_type):
+            # Purge any siblings with a boundary between them
+            if not any(
+                ps.segment.is_type(align_boundary)
+                for ps in parent_segment.path_to(sibling)
+            ):
+                siblings.append(sibling)
+            else:
+                reflow_logger.debug(
+                    "    Purging a sibling because they're blocked "
+                    "by a boundary: %s",
+                    sibling,
+                )
+
+        # Is the current indent the only one on the line?
+        if any(
+            # Same line
+            sibling.pos_marker.working_line_no == next_seg.pos_marker.working_line_no
+            # And not same position (i.e. not self)
+            and sibling.pos_marker.working_line_pos
+            != next_seg.pos_marker.working_line_pos
+            for sibling in siblings
+        ):
+            reflow_logger.debug("    Found sibling on same line. Treat as single")
+            return " "
+
+        # Work out the current spacing before each.
+        last_code = None
+        max_desired_line_pos = 0
+        for seg in parent_segment.raw_segments:
+            for sibling in siblings:
+                # NOTE: We're asserting that there must have been
+                # a last_code. Otherwise this won't work.
+                if (
+                    seg.pos_marker.working_loc == sibling.pos_marker.working_loc
+                    and last_code
+                ):
+                    loc = last_code.pos_marker.working_loc_after(last_code.raw)
+                    reflow_logger.debug(
+                        "    loc for %s: %s from %s",
+                        sibling,
+                        loc,
+                        last_code,
+                    )
+                    if loc[1] > max_desired_line_pos:
+                        max_desired_line_pos = loc[1]
+            if seg.is_code:
+                last_code = seg
+
+        desired_space = " " * (
+            1 + max_desired_line_pos - whitespace_seg.pos_marker.working_line_pos
+        )
+        reflow_logger.debug(
+            "    desired_space: %r (based on max line pos of %s)",
+            desired_space,
+            max_desired_line_pos,
+        )
+        return desired_space
+
+    @classmethod
+    def _handle_respace__inline_with_space(
+        cls,
+        pre_constraint: str,
+        post_constraint: str,
+        next_block: Optional[ReflowBlock],
+        root_segment: BaseSegment,
+        segment_buffer: List[RawSegment],
+        last_whitespace: RawSegment,
+    ) -> Tuple[List[RawSegment], List[LintFix]]:
+        """Check inline spacing is the right size.
+
+        This forms one of the cases handled by .respace_point().
+
+        This code assumes:
+        - a ReflowPoint with no newlines.
+        - a ReflowPoint which has _some_ whitespace.
+
+        Given this we apply constraints to ensure the whitespace
+        is of an appropriate size.
+        """
+        new_fixes: List[LintFix] = []
+        # Get some indices so that we can reference around them
+        ws_idx = segment_buffer.index(last_whitespace)
+
+        # Do we have either side set to "any"
+        if "any" in [pre_constraint, post_constraint]:
+            # In this instance - don't change anything.
+            # e.g. this could mean there is a comment on one side.
+            return segment_buffer, new_fixes
+
+        # Do we have either side set to "touch"?
+        if "touch" in [pre_constraint, post_constraint]:
+            # In this instance - no whitespace is correct, This
+            # means we should delete it.
+            new_fixes.append(
+                LintFix(
+                    "delete",
+                    anchor=last_whitespace,
+                )
+            )
+            segment_buffer.pop(ws_idx)
+            return segment_buffer, new_fixes
+
+        # Handle left alignment & singles
+        if (
+            post_constraint.startswith("align") and next_block
+        ) or pre_constraint == post_constraint == "single":
+
+            # Determine the desired spacing, either as alignment or as a single.
+            if post_constraint.startswith("align") and next_block:
+                alignment_config = post_constraint.split(":")
+                seg_type = alignment_config[1]
+                align_within = (
+                    alignment_config[2] if len(alignment_config) > 2 else None
+                )
+                align_boundary = (
+                    alignment_config[3] if len(alignment_config) > 3 else None
+                )
+                reflow_logger.debug(
+                    "    Alignment Config: %s, %s, %s, %s",
+                    seg_type,
+                    align_within,
+                    align_boundary,
+                    next_block.segments[0].pos_marker.working_line_pos,
+                )
+
+                desired_space = cls._determine_aligned_inline_spacing(
+                    root_segment,
+                    last_whitespace,
+                    next_block.segments[0],
+                    seg_type,
+                    align_within,
+                    align_boundary,
+                )
+            else:
+                desired_space = " "
+
+            if last_whitespace.raw != desired_space:
+                new_seg = last_whitespace.edit(desired_space)
+                new_fixes.append(
+                    LintFix(
+                        "replace",
+                        anchor=last_whitespace,
+                        edit=[new_seg],
+                    )
+                )
+                segment_buffer[ws_idx] = new_seg
+
+            return segment_buffer, new_fixes
+
+        raise NotImplementedError(  # pragma: no cover
+            f"Unexpected Constraints: {pre_constraint}, {post_constraint}"
+        )
+
+    @staticmethod
+    def _handle_respace__inline_without_space(
+        pre_constraint: str,
+        post_constraint: str,
+        prev_block: Optional[ReflowBlock],
+        next_block: Optional[ReflowBlock],
+        segment_buffer: List[RawSegment],
+        existing_fixes: List[LintFix],
+        anchor_on: str = "before",
+    ) -> Tuple[List[RawSegment], List[LintFix], bool]:
+        """Ensure spacing is the right size.
+
+        This forms one of the cases handled by .respace_point().
+
+        This code assumes:
+        - a ReflowPoint with no newlines.
+        - a ReflowPoint which _no_ whitespace.
+
+        Given this we apply constraints to either confirm no
+        spacing is required or create some of the right size.
+        """
+        edited = False
+        new_fixes: List[LintFix] = []
+        # Do we have either side set to "touch" or "any"
+        if {"touch", "any"}.intersection([pre_constraint, post_constraint]):
+            # In this instance - no whitespace is correct.
+            # Either because there shouldn't be, or because "any"
+            # means we shouldn't check.
+            pass
+        # Handle the default case
+        elif pre_constraint == post_constraint == "single":
+            # Insert a single whitespace.
+            reflow_logger.debug("    Inserting Single Whitespace.")
+            # Add it to the buffer first (the easy bit). The hard bit
+            # is to then determine how to generate the appropriate LintFix
+            # objects.
+            segment_buffer.append(WhitespaceSegment())
+            edited = True
+
+            # So special handling here. If segments either side
+            # already exist then we don't care which we anchor on
+            # but if one is already an insertion (as shown by a lack)
+            # of pos_marker, then we should piggy back on that pre-existing
+            # fix.
+            existing_fix = None
+            insertion = None
+            if prev_block and not prev_block.segments[-1].pos_marker:
+                existing_fix = "after"
+                insertion = prev_block.segments[-1]
+            elif next_block and not next_block.segments[0].pos_marker:
+                existing_fix = "before"
+                insertion = next_block.segments[0]
+
+            if existing_fix:
+                reflow_logger.debug("    Detected existing fix %s", existing_fix)
+                if not existing_fixes:  # pragma: no cover
+                    raise ValueError(
+                        "Fixes detected, but none passed to .respace(). "
+                        "This will cause conflicts."
+                    )
+                # Find the fix
+                for fix in existing_fixes:
+                    # Does it contain the insertion?
+                    # TODO: This feels ugly - eq for BaseSegment is different
+                    # to uuid matching for RawSegment. Perhaps this should be
+                    # more aligned. There might be a better way of doing this.
+                    if (
+                        insertion
+                        and fix.edit
+                        and insertion.uuid in [elem.uuid for elem in fix.edit]
+                    ):
+                        break
+                else:  # pragma: no cover
+                    reflow_logger.warning("Fixes %s", existing_fixes)
+                    raise ValueError(f"Couldn't find insertion for {insertion}")
+                # Mutate the existing fix
+                assert fix
+                assert fix.edit  # It's going to be an edit if we've picked it up.
+                if existing_fix == "before":
+                    fix.edit = [cast(BaseSegment, WhitespaceSegment())] + fix.edit
+                elif existing_fix == "after":
+                    fix.edit = fix.edit + [cast(BaseSegment, WhitespaceSegment())]
+            else:
+                reflow_logger.debug("    Not Detected existing fix. Creating new")
+                # Take into account hint on where to anchor if given.
+                if prev_block and anchor_on != "after":
+                    new_fixes.append(
+                        LintFix(
+                            "create_after",
+                            anchor=prev_block.segments[-1],
+                            edit=[WhitespaceSegment()],
+                        )
+                    )
+                elif next_block:
+                    new_fixes.append(
+                        LintFix(
+                            "create_before",
+                            anchor=next_block.segments[0],
+                            edit=[WhitespaceSegment()],
+                        )
+                    )
+                else:  # pragma: no cover
+                    NotImplementedError(
+                        "Not set up to handle a missing _after_ and _before_."
+                    )
+        else:  # pragma: no cover
+            # TODO: This will get test coverage when configuration routines
+            # are in properly.
+            raise NotImplementedError(
+                f"Unexpected Constraints: {pre_constraint}, {post_constraint}"
+            )
+
+        return segment_buffer, existing_fixes + new_fixes, edited
 
     def _get_indent_segment(self) -> Optional[RawSegment]:
-        """Get the current indent segment (if there).
-
-        NOTE: This only returns _untemplated_ indents. If templated
-        newline or whitespace segments are found they are skipped.
-        """
-        indent: Optional[RawSegment] = None
+        """Get the current indent segment (if there)."""
+        indent = None
         for seg in reversed(self.segments):
-            if seg.pos_marker and not seg.pos_marker.is_literal():
-                # Skip any templated elements.
-                # NOTE: It must _have_ a position marker at this
-                # point however to take this route. A segment
-                # without a position marker at all, is an edit
-                # or insertion, and so should still be considered.
-                continue
-            elif seg.is_type("newline"):
+            if seg.is_type("newline"):
                 return indent
             elif seg.is_type("whitespace"):
                 indent = seg
-            elif "\n" in (get_consumed_whitespace(seg) or ""):
-                # Consumed whitespace case.
-                # NOTE: In this situation, we're not looking for
-                # separate newline and indent segments, we're
-                # making the assumption that they'll be together
-                # which I think is a safe one for now.
-                return seg
         # i.e. if we never find a newline, it's not an indent.
         return None
 
     def get_indent(self) -> Optional[str]:
         """Get the current indent (if there)."""
-        # If no newlines, it's not an indent. Return None.
-        if not self.num_newlines():
-            return None
-        # If there are newlines but no indent segment. Return "".
         seg = self._get_indent_segment()
-        consumed_whitespace = get_consumed_whitespace(seg)
-        if consumed_whitespace:  # pragma: no cover
-            # Return last bit after newline.
-            # NOTE: Not tested, because usually this would happen
-            # directly via _get_indent_segment.
-            return consumed_whitespace.split("\n")[-1]
-        return seg.raw if seg else ""
-
-    def get_indent_segment_vals(self, exclude_block_indents=False) -> list[int]:
-        """Iterate through any indent segments and extract their values."""
-        values = []
-        for seg in self.segments:
-            if seg.is_type("indent"):
-                indent_seg = cast(Indent, seg)
-                if exclude_block_indents and indent_seg.block_uuid:
-                    continue
-                values.append(indent_seg.indent_val)
-        return values
-
-    @staticmethod
-    def _generate_indent_stats(
-        segments: Sequence[RawSegment],
-    ) -> IndentStats:
-        """Generate the change in intended indent balance.
-
-        This is the main logic which powers .get_indent_impulse()
-        """
-        trough = 0
-        running_sum = 0
-        implicit_indents = []
-        for seg in segments:
-            if seg.is_type("indent"):
-                indent_seg = cast(Indent, seg)
-                running_sum += indent_seg.indent_val
-                # Do we need to add a new implicit indent?
-                if indent_seg.is_implicit:
-                    implicit_indents.append(running_sum)
-                # NOTE: We don't check for removal of implicit indents
-                # because it's unlikely that one would be opened, and then
-                # closed within the same point. That would probably be the
-                # sign of a bug in the dialect.
-            if running_sum < trough:
-                trough = running_sum
-        return IndentStats(running_sum, trough, tuple(implicit_indents))
-
-    def get_indent_impulse(self) -> IndentStats:
-        """Get the change in intended indent balance from this point."""
-        return self._stats
+        return seg.raw if seg else None
 
     def indent_to(
         self,
         desired_indent: str,
         after: Optional[BaseSegment] = None,
         before: Optional[BaseSegment] = None,
-        description: Optional[str] = None,
-        source: Optional[str] = None,
-    ) -> tuple[list[LintResult], "ReflowPoint"]:
+    ) -> Tuple[List[LintFix], "ReflowPoint"]:
         """Coerce a point to have a particular indent.
 
         If the point currently contains no newlines, one will
         be introduced and any trailing whitespace will be effectively
         removed.
 
-        More specifically, the newline is *inserted before* the existing
-        whitespace, with the new indent being a *replacement* for that
+        More specifically, the newline is _inserted_ before the existing
+        whitespace, with the new indent being a replacement for that
         same whitespace.
-
-        For placeholder newlines or indents we generate appropriate
-        source fixes.
         """
-        assert "\n" not in desired_indent, "Newline found in desired indent."
         # Get the indent (or in the case of no newline, the last whitespace)
         indent_seg = self._get_indent_segment()
         reflow_logger.debug(
@@ -421,174 +560,51 @@ class ReflowPoint(ReflowElement):
             desired_indent,
             self.num_newlines(),
         )
-
-        if indent_seg and indent_seg.is_type("placeholder"):
-            # Handle the placeholder case.
-            indent_seg = cast(TemplateSegment, indent_seg)
-            # There should always be a newline, so assert that.
-            assert "\n" in indent_seg.source_str
-            # We should always replace the section _containing_ the
-            # newline, rather than just bluntly inserting. This
-            # makes slicing later easier.
-            current_indent = indent_seg.source_str.split("\n")[-1]
-            source_slice = slice(
-                indent_seg.pos_marker.source_slice.stop - len(current_indent),
-                indent_seg.pos_marker.source_slice.stop,
-            )
-            for existing_source_fix in indent_seg.source_fixes:  # pragma: no cover
-                if slice_overlaps(existing_source_fix.source_slice, source_slice):
-                    reflow_logger.warning(
-                        "Creating overlapping source fix. Results may be "
-                        "unpredictable and this might be a sign of a bug. "
-                        "Please report this along with your query.\n"
-                        f"({existing_source_fix.source_slice} overlaps "
-                        f"{source_slice})"
-                    )
-
-            new_source_fix = SourceFix(
-                desired_indent,
-                source_slice,
-                # The templated slice is going to be a zero slice _anyway_.
-                indent_seg.pos_marker.templated_slice,
-            )
-
-            if new_source_fix in indent_seg.source_fixes:  # pragma: no cover
-                # NOTE: If we're trying to reapply the same fix, don't.
-                # Just return an error without the fixes. This is probably
-                # a bug if we're taking this route, but this clause will help
-                # catch bugs faster if they occur.
-                reflow_logger.warning(
-                    "Attempted to apply a duplicate source fix to %r. "
-                    "Returning this time without fix.",
-                    indent_seg.pos_marker.source_str(),
-                )
-                fixes = []
-                new_segments = self.segments
-            else:
-                if current_indent:
-                    new_source_str = (
-                        indent_seg.source_str[: -len(current_indent)] + desired_indent
-                    )
-                else:
-                    new_source_str = indent_seg.source_str + desired_indent
-                assert "\n" in new_source_str
-                new_placeholder = indent_seg.edit(
-                    source_fixes=[new_source_fix],
-                    source_str=new_source_str,
-                )
-                fixes = [LintFix.replace(indent_seg, [new_placeholder])]
-                new_segments = tuple(
-                    new_placeholder if seg is indent_seg else seg
-                    for seg in self.segments
-                )
-
-            return [
-                LintResult(
-                    indent_seg,
-                    fixes,
-                    description=description
-                    or f"Expected {_indent_description(desired_indent)}.",
-                    source=source,
-                )
-            ], ReflowPoint(new_segments)
-
-        elif self.num_newlines():
-            # There is already a newline. Is there an indent?
+        if self.num_newlines():
+            # There is already a newline.
             if indent_seg:
                 # Coerce existing indent to desired.
                 if indent_seg.raw == desired_indent:
                     # Trivial case. Indent already correct
                     return [], self
                 elif desired_indent == "":
+                    # Coerce to no indent. We don't want the indent. Delete it.
+                    new_indent = indent_seg.edit(desired_indent)
                     idx = self.segments.index(indent_seg)
-                    return [
-                        LintResult(
-                            indent_seg,
-                            # Coerce to no indent. We don't want the indent. Delete it.
-                            [LintFix.delete(indent_seg)],
-                            description=description or "Line should not be indented.",
-                            source=source,
-                        )
-                    ], ReflowPoint(self.segments[:idx] + self.segments[idx + 1 :])
+                    return [LintFix.delete(indent_seg)], ReflowPoint(
+                        self.segments[:idx] + self.segments[idx + 1 :]
+                    )
 
                 # Standard case of an indent change.
                 new_indent = indent_seg.edit(desired_indent)
                 idx = self.segments.index(indent_seg)
-                return [
-                    LintResult(
-                        indent_seg,
-                        [LintFix.replace(indent_seg, [new_indent])],
-                        description=description
-                        or f"Expected {_indent_description(desired_indent)}.",
-                        source=source,
-                    )
-                ], ReflowPoint(
+                return [LintFix.replace(indent_seg, [new_indent])], ReflowPoint(
                     self.segments[:idx] + (new_indent,) + self.segments[idx + 1 :]
                 )
-
             else:
                 # There is a newline, but no indent. Make one after the newline
-                # Find the index of the last newline (there _will_ be one because
-                # we checked self.num_newlines() above).
-
-                # Before going further, check we have a non-zero indent.
-                if not desired_indent:
-                    # We're trying to coerce a non-existent indent to zero. This
-                    # means we're already ok.
-                    return [], self
-
-                for idx in range(len(self.segments) - 1, -1, -1):
-                    # NOTE: Must be a _literal_ newline, not a templated one.
-                    # https://github.com/sqlfluff/sqlfluff/issues/4367
+                # Find the index of the last newline.
+                for idx in range(len(self.segments) - 1, 0, -1):
                     if self.segments[idx].is_type("newline"):
-                        if self.segments[idx].pos_marker.is_literal():
-                            break
-
+                        break
                 new_indent = WhitespaceSegment(desired_indent)
                 return [
-                    LintResult(
-                        # The anchor for the *result* should be the segment
-                        # *after* the newline, otherwise the location of the fix
-                        # is confusing.
-                        # For this method, `before` is optional, but normally
-                        # passed. If it is there, use that as the anchor
-                        # instead. We fall back to the last newline if not.
-                        before if before else self.segments[idx],
-                        # Rather than doing a `create_after` here, we're
-                        # going to do a replace. This is effectively to give a hint
-                        # to the linter that this is safe to do before a templated
-                        # placeholder. This solves some potential bugs - although
-                        # it feels a bit like a workaround.
-                        [
-                            LintFix.replace(
-                                self.segments[idx], [self.segments[idx], new_indent]
-                            )
-                        ],
-                        description=description
-                        or f"Expected {_indent_description(desired_indent)}.",
-                        source=source,
-                    )
+                    LintFix.create_after(self.segments[idx], [new_indent])
                 ], ReflowPoint(
                     self.segments[: idx + 1] + (new_indent,) + self.segments[idx + 1 :]
                 )
-
         else:
             # There isn't currently a newline.
             new_newline = NewlineSegment()
-            new_segs: list[RawSegment]
             # Check for whitespace
             ws_seg = None
             for seg in self.segments[::-1]:
                 if seg.is_type("whitespace"):
                     ws_seg = seg
             if not ws_seg:
-                # Work out the new segments. Always a newline, only whitespace if
-                # there's a non zero indent.
-                new_segs = [new_newline] + (
-                    [WhitespaceSegment(desired_indent)] if desired_indent else []
-                )
                 # There isn't a whitespace segment either. We need to insert one.
                 # Do we have an anchor?
+                new_indent = WhitespaceSegment(desired_indent)
                 if not before and not after:  # pragma: no cover
                     raise NotImplementedError(
                         "Not set up to handle empty points in this "
@@ -596,85 +612,39 @@ class ReflowPoint(ReflowElement):
                         f"anchor: {self.segments}"
                     )
                 # Otherwise make a new indent, attached to the relevant anchor.
-                # Prefer anchoring before because it makes the labelling better.
                 elif before:
-                    before_raw = (
-                        cast(TemplateSegment, before).source_str
-                        if before.is_type("placeholder")
-                        else before.raw
-                    )
-                    fix = LintFix.create_before(before, new_segs)
-                    description = description or (
-                        "Expected line break and "
-                        f"{_indent_description(desired_indent)} "
-                        f"before {before_raw!r}."
-                    )
+                    fix = LintFix.create_before(before, [new_newline, new_indent])
                 else:
                     assert after  # mypy hint
-                    after_raw = (
-                        cast(TemplateSegment, after).source_str
-                        if after.is_type("placeholder")
-                        else after.raw
-                    )
-                    fix = LintFix.create_after(after, new_segs)
-                    description = description or (
-                        "Expected line break and "
-                        f"{_indent_description(desired_indent)} "
-                        f"after {after_raw!r}."
-                    )
-                new_point = ReflowPoint(tuple(new_segs))
-                anchor = before
+                    fix = LintFix.create_after(after, [new_newline, new_indent])
+                new_point = ReflowPoint((new_newline, new_indent))
             else:
                 # There is whitespace. Coerce it to the right indent and add
                 # a newline _before_. In the edge case that we're coercing to
                 # _no indent_, edit existing indent to be the newline and leave
                 # it there.
+                new_segs: List[RawSegment]
                 if desired_indent == "":
                     new_segs = [new_newline]
                 else:
                     new_segs = [new_newline, ws_seg.edit(desired_indent)]
                 idx = self.segments.index(ws_seg)
-                if not description:
-                    # Prefer before, because it makes the anchoring better.
-                    if before:
-                        description = (
-                            "Expected line break and "
-                            f"{_indent_description(desired_indent)} "
-                            f"before {before.raw!r}."
-                        )
-                    elif after:
-                        description = (
-                            "Expected line break and "
-                            f"{_indent_description(desired_indent)} "
-                            f"after {after.raw!r}."
-                        )
-                    else:  # pragma: no cover
-                        # NOTE: Doesn't have test coverage because there's
-                        # normally an `after` or `before` value, so this
-                        # clause is unused.
-                        description = (
-                            "Expected line break and "
-                            f"{_indent_description(desired_indent)}."
-                        )
                 fix = LintFix.replace(ws_seg, new_segs)
                 new_point = ReflowPoint(
                     self.segments[:idx] + tuple(new_segs) + self.segments[idx + 1 :]
                 )
-                anchor = ws_seg
 
-            return [
-                LintResult(anchor, fixes=[fix], description=description, source=source)
-            ], new_point
+            return [fix], new_point
 
     def respace_point(
         self,
         prev_block: Optional[ReflowBlock],
         next_block: Optional[ReflowBlock],
         root_segment: BaseSegment,
-        lint_results: list[LintResult],
+        fixes: List[LintFix],
         strip_newlines: bool = False,
         anchor_on: str = "before",
-    ) -> tuple[list[LintResult], "ReflowPoint"]:
+    ) -> Tuple[List[LintFix], "ReflowPoint"]:
         """Respace a point based on given constraints.
 
         NB: This effectively includes trailing whitespace fixes.
@@ -684,30 +654,23 @@ class ReflowPoint(ReflowElement):
 
         Note that the `strip_newlines` functionality exists here as a slight
         exception to pure respacing, but as a very simple case of positioning
-        line breaks. The default operation of `respace` does not enable it,
+        line breaks. The default operation of `respace` does not enable it
         however it exists as a convenience for rules which wish to use it.
         """
-        existing_results = lint_results[:]
-        pre_constraint, post_constraint, strip_newlines = determine_constraints(
+        pre_constraint, post_constraint, strip_newlines = self._determine_constraints(
             prev_block, next_block, strip_newlines
         )
 
-        reflow_logger.debug("* Respacing: %r @ %s", self.raw, self.pos_marker)
+        reflow_logger.debug("Respacing: %s", self)
 
         # The buffer is used to create the new reflow point to return
-        segment_buffer, last_whitespace, new_results = process_spacing(
+        segment_buffer, last_whitespace, new_fixes = self._process_spacing(
             list(self.segments), strip_newlines
         )
 
         # Check for final trailing whitespace (which otherwise looks like an indent).
         if next_block and "end_of_file" in next_block.class_types and last_whitespace:
-            new_results.append(
-                LintResult(
-                    last_whitespace,
-                    [LintFix.delete(last_whitespace)],
-                    description="Unnecessary trailing whitespace at end of file.",
-                )
-            )
+            new_fixes.append(LintFix.delete(last_whitespace))
             segment_buffer.remove(last_whitespace)
             last_whitespace = None
 
@@ -723,16 +686,16 @@ class ReflowPoint(ReflowElement):
             # before it, and the position markers imply there was
             # a removal between them, then remove the whitespace.
             # This ensures a consistent indent.
+            # TODO: Check this doesn't duplicate indentation code
+            # once written.
+
+            # The test is less about whether it's longer than one
+            # (because we should already have removed additional
+            # whitespace above). This is about attempting consistency.
             if last_whitespace:
                 ws_idx = self.segments.index(last_whitespace)
                 if ws_idx > 0:
-                    # NOTE: Iterate by index so that we don't slice the full range.
-                    for prev_seg_idx in range(ws_idx - 1, -1, -1):
-                        prev_seg = self.segments[prev_seg_idx]
-                        # Skip past any indents
-                        if not prev_seg.is_type("indent"):
-                            break
-
+                    prev_seg = self.segments[ws_idx - 1]
                     if (
                         prev_seg.is_type("newline")
                         # Not just unequal. Must be actively _before_.
@@ -743,72 +706,49 @@ class ReflowPoint(ReflowElement):
                             "    Removing non-contiguous whitespace post removal."
                         )
                         segment_buffer.remove(last_whitespace)
-                        # Ideally we should attach to an existing result.
-                        # To do that effectively, we should look for the removed
-                        # segment in the existing results.
-                        temp_idx = last_whitespace.pos_marker.templated_slice.start
-                        for res in existing_results:
-                            if (
-                                res.anchor
-                                and res.anchor.pos_marker
-                                and res.anchor.pos_marker.templated_slice.stop
-                                == temp_idx
-                            ):
-                                break
-                        else:  # pragma: no cover
-                            raise NotImplementedError("Could not find removal result.")
-                        existing_results.remove(res)
-                        new_results.append(
-                            LintResult(
-                                res.anchor,
-                                fixes=res.fixes + [LintFix("delete", last_whitespace)],
-                                description=res.description,
-                            )
-                        )
-            # Return the results.
-            return existing_results + new_results, ReflowPoint(tuple(segment_buffer))
+                        new_fixes.append(LintFix("delete", last_whitespace))
 
-        # Otherwise is this an inline case? (i.e. no newline)
-        reflow_logger.debug(
-            "    Inline case. Constraints: %s <-> %s.",
-            pre_constraint,
-            post_constraint,
-        )
-
-        # Do we at least have _some_ whitespace?
-        if last_whitespace:
-            # We do - is it the right size?
-            segment_buffer, results = handle_respace__inline_with_space(
-                pre_constraint,
-                post_constraint,
-                prev_block,
-                next_block,
-                root_segment,
-                segment_buffer,
-                last_whitespace,
-            )
-            new_results.extend(results)
+        # Is this an inline case? (i.e. no newline)
         else:
-            # No. Should we insert some?
-            # NOTE: This method operates on the existing fix buffer.
-            segment_buffer, new_results, edited = handle_respace__inline_without_space(
+            reflow_logger.debug(
+                "    Inline case. Constraints: %s <-> %s.",
                 pre_constraint,
                 post_constraint,
-                prev_block,
-                next_block,
-                segment_buffer,
-                existing_results + new_results,
-                anchor_on=anchor_on,
             )
-            existing_results = []
-            if edited:
-                reflow_logger.debug("    Modified result buffer: %s", new_results)
+
+            # Do we at least have _some_ whitespace?
+            if last_whitespace:
+                # We do - is it the right size?
+                segment_buffer, delta_fixes = self._handle_respace__inline_with_space(
+                    pre_constraint,
+                    post_constraint,
+                    next_block,
+                    root_segment,
+                    segment_buffer,
+                    last_whitespace,
+                )
+                new_fixes.extend(delta_fixes)
+            else:
+                # No. Should we insert some?
+                # NOTE: This method operates on the existing fix buffer.
+                (
+                    segment_buffer,
+                    fixes,
+                    edited,
+                ) = self._handle_respace__inline_without_space(
+                    pre_constraint,
+                    post_constraint,
+                    prev_block,
+                    next_block,
+                    segment_buffer,
+                    fixes,
+                    anchor_on=anchor_on,
+                )
+                if edited:
+                    reflow_logger.debug("    Modified fix buffer: %s", fixes)
 
         # Only log if we actually made a change.
-        if new_results:
-            reflow_logger.debug("    New Results: %s", new_results)
+        if new_fixes:
+            reflow_logger.debug("    New Fixes: %s", new_fixes)
 
-        return existing_results + new_results, ReflowPoint(tuple(segment_buffer))
-
-
-ReflowSequenceType = list[Union[ReflowBlock, ReflowPoint]]
+        return fixes + new_fixes, ReflowPoint(tuple(segment_buffer))

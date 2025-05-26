@@ -8,20 +8,14 @@ Teradata Database SQL Data Definition Language Syntax and Examples
 
 """
 
-from sqlfluff.core.dialects import load_raw_dialect
 from sqlfluff.core.parser import (
     AnyNumberOf,
-    AnySetOf,
     Anything,
     BaseSegment,
     Bracketed,
     CodeSegment,
-    ComparisonOperatorSegment,
-    CompositeComparisonOperatorSegment,
     Dedent,
     Delimited,
-    IdentifierSegment,
-    ImplicitIndent,
     Indent,
     Matchable,
     OneOf,
@@ -29,17 +23,14 @@ from sqlfluff.core.parser import (
     Ref,
     RegexLexer,
     Sequence,
-    StringParser,
-    TypedParser,
+    StartsWith,
 )
+
+from sqlfluff.core.dialects import load_raw_dialect
 from sqlfluff.dialects import dialect_ansi as ansi
 
 ansi_dialect = load_raw_dialect("ansi")
-teradata_dialect = ansi_dialect.copy_as(
-    "teradata",
-    formatted_name="Teradata",
-    docstring="""The dialect for `Teradata <https://www.teradata.co.uk/>`_.""",
-)
+teradata_dialect = ansi_dialect.copy_as("teradata")
 
 teradata_dialect.patch_lexer_matchers(
     [
@@ -48,6 +39,7 @@ teradata_dialect.patch_lexer_matchers(
             "numeric_literal",
             r"([0-9]+(\.[0-9]*)?)",
             CodeSegment,
+            segment_kwargs={"type": "numeric_literal"},
         ),
     ]
 )
@@ -69,10 +61,8 @@ teradata_dialect.sets("unreserved_keywords").update(
         "CASESPECIFIC",
         "CS",
         "DAYS",
-        "DEL",
         "DUAL",
         "ERRORCODE",
-        "EXCL",
         "EXPORT",
         "FALLBACK",
         "FORMAT",
@@ -87,20 +77,15 @@ teradata_dialect.sets("unreserved_keywords").update(
         "MAXVALUELENGTH",
         "MEETS",
         "MERGEBLOCKRATIO",
-        "NONE",
-        "OVERRIDE",
         "PERCENT",
         "PROFILE",
         "PROTECTION",
-        "QUERY_BAND",
         "QUIT",
         "RUN",
         "SAMPLE",
         "SEL",
         "SS",
         "STAT",
-        "STATS",
-        "STATISTICS",
         "SUMMARY",
         "THRESHOLD",
         "UC",
@@ -108,50 +93,9 @@ teradata_dialect.sets("unreserved_keywords").update(
     ]
 )
 
-teradata_dialect.sets("reserved_keywords").update(
-    ["LOCKING", "UNION", "REPLACE", "TIMESTAMP"]
-)
+teradata_dialect.sets("reserved_keywords").update(["UNION", "TIMESTAMP"])
 
 teradata_dialect.sets("bare_functions").update(["DATE"])
-
-teradata_dialect.replace(
-    # ANSI standard comparison operators plus Teradata extensions
-    ComparisonOperatorGrammar=OneOf(
-        Ref("EqualsSegment"),
-        Ref("EqualsSegment_a"),
-        Ref("GreaterThanSegment"),
-        Ref("GreaterThanSegment_a"),
-        Ref("LessThanSegment"),
-        Ref("LessThanSegment_a"),
-        Ref("GreaterThanOrEqualToSegment"),
-        Ref("GreaterThanOrEqualToSegment_a"),
-        Ref("LessThanOrEqualToSegment"),
-        Ref("LessThanOrEqualToSegment_a"),
-        Ref("NotEqualToSegment"),
-        Ref("NotEqualToSegment_a"),
-        Ref("NotEqualToSegment_b"),
-        Ref("NotEqualToSegment_c"),
-        Ref("LikeOperatorSegment"),
-        Sequence("IS", "DISTINCT", "FROM"),
-        Sequence("IS", "NOT", "DISTINCT", "FROM"),
-    ),
-    # match ANSI's naked identifier casefold, teradata is case-insensitive.
-    QuotedIdentifierSegment=TypedParser(
-        "double_quote", IdentifierSegment, type="quoted_identifier", casefold=str.upper
-    ),
-)
-
-teradata_dialect.add(
-    # Add Teradata comparison operator extensions
-    EqualsSegment_a=StringParser("EQ", ComparisonOperatorSegment),
-    GreaterThanSegment_a=StringParser("GT", ComparisonOperatorSegment),
-    LessThanSegment_a=StringParser("LT", ComparisonOperatorSegment),
-    GreaterThanOrEqualToSegment_a=StringParser("GE", ComparisonOperatorSegment),
-    LessThanOrEqualToSegment_a=StringParser("LE", ComparisonOperatorSegment),
-    NotEqualToSegment_a=StringParser("NE", ComparisonOperatorSegment),
-    NotEqualToSegment_b=StringParser("NOT=", ComparisonOperatorSegment),
-    NotEqualToSegment_c=StringParser("^=", ComparisonOperatorSegment),
-)
 
 
 # BTEQ statement
@@ -269,7 +213,7 @@ class TdCollectStatisticsStatementSegment(BaseSegment):
     match_grammar = Sequence(
         "COLLECT",
         Ref.keyword("SUMMARY", optional=True),
-        OneOf("STAT", "STATS", "STATISTICS"),
+        OneOf("STATISTICS", "STAT"),
         Sequence(
             "USING",
             Delimited(
@@ -299,7 +243,7 @@ class TdCollectStatisticsStatementSegment(BaseSegment):
                 # COLUMN ...
                 Sequence(
                     "COLUMN",
-                    OptionallyBracketed(
+                    Bracketed(
                         Delimited(
                             OneOf(
                                 Ref("ColumnReferenceSegment"),
@@ -396,7 +340,6 @@ class DatatypeSegment(ansi.DatatypeSegment):
 
     match_grammar = Sequence(
         Ref("DatatypeIdentifierSegment"),
-        Ref("BracketedArguments", optional=True),
         Bracketed(
             OneOf(
                 Delimited(Ref("ExpressionSegment")),
@@ -502,7 +445,6 @@ class TdCreateTableOptions(BaseSegment):
 
     , NO FALLBACK, NO BEFORE JOURNAL, NO AFTER JOURNAL, CHECKSUM = DEFAULT
     , DEFAULT MERGEBLOCKRATIO
-    , MAP = TD_MAP1
     """
 
     type = "create_table_options_statement"
@@ -549,8 +491,6 @@ class TdCreateTableOptions(BaseSegment):
                     Ref("NumericLiteralSegment"),
                     Ref.keyword("PERCENT", optional=True),
                 ),
-                # MAP = mapname
-                Sequence("MAP", Ref("EqualsSegment"), Ref("ObjectReferenceSegment")),
             ),
         ),
     )
@@ -634,13 +574,6 @@ class TdTableConstraints(BaseSegment):
         ),
         # WITH DATA
         Sequence("WITH", Sequence("NO", optional=True), "DATA"),
-        # AND STATISITCS
-        Sequence(
-            "AND",
-            Sequence("NO", optional=True),
-            OneOf("STAT", "STATS", "STATISTICS"),
-            optional=True,
-        ),
         # ON COMMIT PRESERVE ROWS
         Sequence("ON", "COMMIT", OneOf("PRESERVE", "DELETE"), "ROWS"),
     )
@@ -652,14 +585,12 @@ class CreateTableStatementSegment(BaseSegment):
     type = "create_table_statement"
     match_grammar = Sequence(
         "CREATE",
-        Ref("OrReplaceGrammar", optional=True),
-        AnySetOf(
-            OneOf("SET", "MULTISET"),
-            OneOf(Sequence("GLOBAL", "TEMPORARY"), "VOLATILE"),
-            optional=True,
-        ),
+        Sequence("OR", "REPLACE", optional=True),
+        # Adding Teradata specific [MULTISET| SET]
+        OneOf("SET", "MULTISET", optional=True),
+        OneOf(Sequence("GLOBAL", "TEMPORARY"), "VOLATILE", optional=True),
         "TABLE",
-        Ref("IfNotExistsGrammar", optional=True),
+        Sequence("IF", "NOT", "EXISTS", optional=True),
         Ref("TableReferenceSegment"),
         # , NO FALLBACK, NO BEFORE JOURNAL, NO AFTER JOURNAL
         Ref("TdCreateTableOptions", optional=True),
@@ -686,23 +617,6 @@ class CreateTableStatementSegment(BaseSegment):
     )
 
 
-class CreateViewStatementSegment(BaseSegment):
-    """A `[CREATE | REPLACE] VIEW` statement."""
-
-    type = "create_view_statement"
-    match_grammar: Matchable = Sequence(
-        OneOf("CREATE", "REPLACE"),
-        "VIEW",
-        Ref("IfNotExistsGrammar", optional=True),
-        Ref("TableReferenceSegment"),
-        # Optional list of column names
-        Ref("BracketedColumnReferenceListGrammar", optional=True),
-        "AS",
-        OptionallyBracketed(Ref("SelectableGrammar")),
-        Ref("WithNoSchemaBindingClauseSegment", optional=True),
-    )
-
-
 # Update
 class UpdateStatementSegment(BaseSegment):
     """A `Update from` statement.
@@ -717,7 +631,6 @@ class UpdateStatementSegment(BaseSegment):
     type = "update_statement"
     match_grammar = Sequence(
         "UPDATE",
-        Indent,
         OneOf(
             Ref("TableReferenceSegment"),
             Ref("FromUpdateClauseSegment"),
@@ -726,7 +639,6 @@ class UpdateStatementSegment(BaseSegment):
                 Ref("FromUpdateClauseSegment"),
             ),
         ),
-        Dedent,
         Ref("SetClauseListSegment"),
         Ref("WhereClauseSegment", optional=True),
     )
@@ -736,7 +648,8 @@ class FromUpdateClauseSegment(BaseSegment):
     """A `FROM` clause like in `SELECT` but terminated by SET."""
 
     type = "from_in_update_clause"
-    match_grammar = Sequence(
+    match_grammar = StartsWith("FROM", terminator=Ref.keyword("SET"))
+    parse_grammar = Sequence(
         "FROM",
         Delimited(
             # Optional old school delimited joins
@@ -751,7 +664,7 @@ class StatementSegment(ansi.StatementSegment):
 
     type = "statement"
 
-    match_grammar = ansi.StatementSegment.match_grammar.copy(
+    parse_grammar = ansi.StatementSegment.parse_grammar.copy(
         insert=[
             Ref("TdCollectStatisticsStatementSegment"),
             Ref("BteqStatementSegment"),
@@ -760,57 +673,50 @@ class StatementSegment(ansi.StatementSegment):
             Ref("TdCommentStatementSegment"),
             Ref("DatabaseStatementSegment"),
             Ref("SetSessionStatementSegment"),
-            Ref("SetQueryBandStatementSegment"),
         ],
     )
+
+    match_grammar = ansi.StatementSegment.match_grammar.copy()
+
+
+teradata_dialect.add(
+    TdCastIdentifierGrammar=Sequence(
+        OneOf("DATE", "TIMESTAMP"), Ref("ExpressionSegment")
+    ),
+)
+
+teradata_dialect.replace(
+    SingleIdentifierGrammar=OneOf(
+        Ref("NakedIdentifierSegment"),
+        Ref("QuotedIdentifierSegment"),
+        Ref("TdCastIdentifierGrammar"),
+    ),
+    SelectClauseSegmentGrammar=Sequence(
+        OneOf("SELECT", "SEL"),
+        Ref("SelectClauseModifierSegment", optional=True),
+        Indent,
+        Delimited(
+            Ref("SelectClauseElementSegment"),
+            allow_trailing=True,
+        ),
+    ),
+)
 
 
 class QualifyClauseSegment(BaseSegment):
     """A `QUALIFY` clause like in `SELECT`."""
 
     type = "qualify_clause"
-    match_grammar = Sequence(
+    match_grammar = StartsWith(
         "QUALIFY",
-        ImplicitIndent,
+        terminator=OneOf(Sequence("ORDER", "BY"), "LIMIT", "QUALIFY", "WINDOW"),
+        enforce_whitespace_preceding_terminator=True,
+    )
+    parse_grammar = Sequence(
+        "QUALIFY",
+        Indent,
         OptionallyBracketed(Ref("ExpressionSegment")),
         Dedent,
-    )
-
-
-class LockingClauseSegment(BaseSegment):
-    """A `LOCKING` clause for Teradata.
-
-    https://docs.teradata.com/r/Enterprise_IntelliFlex_VMware/SQL-Data-Manipulation-Language/Statement-Syntax/LOCKING-Request-Modifier
-    """
-
-    type = "locking_clause"
-    match_grammar = Sequence(
-        OneOf(
-            "LOCKING",
-            "LOCK",
-        ),
-        OneOf(
-            "ROW",
-            Sequence("TABLE", Ref("ObjectReferenceSegment", optional=True)),
-            Sequence("VIEW", Ref("ObjectReferenceSegment", optional=True)),
-            Sequence("DATABASE", Ref("ObjectReferenceSegment", optional=True)),
-        ),
-        OneOf(
-            "FOR",
-            "IN",
-        ),
-        OneOf(
-            "ACCESS",
-            "WRITE",
-            "EXCLUSIVE",
-            "EXCL",
-            Sequence("READ", Sequence("OVERRIDE", optional=True)),
-            "SHARE",
-            "CHECKSUM",
-            Sequence("LOAD", "COMMITTED"),
-        ),
-        Sequence("MODE", optional=True),
-        Sequence("NOWAIT", optional=True),
     )
 
 
@@ -820,25 +726,10 @@ class SelectStatementSegment(ansi.SelectStatementSegment):
     https://dev.mysql.com/doc/refman/5.7/en/select.html
     """
 
-    match_grammar_with_qualify_clause = ansi.SelectStatementSegment.match_grammar.copy(
+    match_grammar = ansi.SelectStatementSegment.match_grammar
+    parse_grammar = ansi.SelectStatementSegment.parse_grammar.copy(
         insert=[Ref("QualifyClauseSegment", optional=True)],
         before=Ref("OrderByClauseSegment", optional=True),
-    )
-
-    match_grammar = match_grammar_with_qualify_clause.copy(
-        insert=[Ref("LockingClauseSegment", optional=True)],
-        before=Ref("SelectClauseSegment"),
-    )
-
-
-class WithCompoundStatementSegment(ansi.WithCompoundStatementSegment):
-    """A `SELECT` statement preceded by a selection of `WITH` clauses.
-
-    `WITH tab (col1,col2) AS (SELECT a,b FROM x)`
-    """
-
-    match_grammar = ansi.WithCompoundStatementSegment.match_grammar.copy(
-        insert=[Ref("LockingClauseSegment", optional=True)], at=0
     )
 
 
@@ -848,47 +739,10 @@ class UnorderedSelectStatementSegment(ansi.UnorderedSelectStatementSegment):
     https://dev.mysql.com/doc/refman/5.7/en/select.html
     """
 
-    match_grammar = ansi.UnorderedSelectStatementSegment.match_grammar.copy(
+    match_grammar = ansi.UnorderedSelectStatementSegment.match_grammar
+    parse_grammar = ansi.UnorderedSelectStatementSegment.parse_grammar.copy(
         insert=[Ref("QualifyClauseSegment", optional=True)],
         before=Ref("OverlapsClauseSegment", optional=True),
-    )
-
-
-class SelectClauseSegment(ansi.SelectClauseSegment):
-    """A group of elements in a select target statement.
-
-    Remove OVERLAPS as a terminator as this can be part of SelectClauseModifierSegment
-    """
-
-    match_grammar = ansi.SelectClauseSegment.match_grammar.copy(
-        # Allow "SEL" as in place of just "SELECT"
-        insert=[OneOf("SELECT", "SEL")],
-        before=Ref.keyword("SELECT"),
-        remove=[Ref.keyword("SELECT")],
-        terminators=[
-            "FROM",
-            "WHERE",
-            Sequence("ORDER", "BY"),
-            "LIMIT",
-            Ref("SetOperatorSegment"),
-        ],
-        replace_terminators=True,
-    )
-
-
-class DeleteStatementSegment(BaseSegment):
-    """A `DELETE` statement.
-
-    DEL[ETE] FROM <table name> [ WHERE <search condition> ]
-    """
-
-    type = "delete_statement"
-    # match grammar. This one makes sense in the context of knowing that it's
-    # definitely a statement, we just don't know what type yet.
-    match_grammar: Matchable = Sequence(
-        OneOf("DELETE", "DEL"),
-        Ref("FromClauseSegment"),
-        Ref("WhereClauseSegment", optional=True),
     )
 
 
@@ -903,12 +757,6 @@ class SelectClauseModifierSegment(BaseSegment):
     match_grammar = OneOf(
         "DISTINCT",
         "ALL",
-        Sequence(
-            "TOP",
-            Ref("ExpressionSegment"),
-            Sequence("PERCENT", optional=True),
-            Sequence("WITH", "TIES", optional=True),
-        ),
         Sequence(
             "NORMALIZE",
             OneOf(
@@ -932,6 +780,28 @@ class SelectClauseModifierSegment(BaseSegment):
             ),
         ),
     )
+
+
+class SelectClauseSegment(ansi.SelectClauseSegment):
+    """A group of elements in a select target statement.
+
+    Remove OVERLAPS as a terminator as this can be part of SelectClauseModifierSegment
+    """
+
+    match_grammar = StartsWith(
+        Sequence(
+            OneOf("SELECT", "SEL"), Ref("WildcardExpressionSegment", optional=True)
+        ),
+        terminator=OneOf(
+            "FROM",
+            "WHERE",
+            Sequence("ORDER", "BY"),
+            "LIMIT",
+            Ref("SetOperatorSegment"),
+        ),
+        enforce_whitespace_preceding_terminator=True,
+    )
+    parse_grammar = ansi.SelectClauseSegment.parse_grammar
 
 
 class DatabaseStatementSegment(BaseSegment):
@@ -962,47 +832,4 @@ class SetSessionStatementSegment(BaseSegment):
             "SS",
         ),
         Ref("DatabaseStatementSegment"),
-    )
-
-
-class SetQueryBandStatementSegment(BaseSegment):
-    """A `SET QUERY_BAND` statement.
-
-    SET QUERY_BAND = { 'band_specification [...]' | NONE } [ UPDATE ]
-    FOR { SESSION [VOLATILE] | TRANSACTION } [;]
-
-    https://docs.teradata.com/r/Teradata-VantageTM-SQL-Data-Definition-Language-Syntax-and-Examples/July-2021/Session-Statements/SET-QUERY_BAND
-    """
-
-    type = "set_query_band_statement"
-    match_grammar: Matchable = Sequence(
-        "SET",
-        "QUERY_BAND",
-        Ref("EqualsSegment"),
-        OneOf(Ref("QuotedLiteralSegment"), "NONE"),
-        Sequence("UPDATE", optional=True),
-        "FOR",
-        OneOf(Sequence("SESSION", Sequence("VOLATILE", optional=True)), "TRANSACTION"),
-    )
-
-
-class NotEqualToSegment_b(CompositeComparisonOperatorSegment):
-    """The comparison operator extension NOT=.
-
-    https://www.docs.teradata.com/r/Teradata-Database-SQL-Functions-Operators-Expressions-and-Predicates/March-2017/Comparison-Operators-and-Functions/Comparison-Operators/Supported-Comparison-Operators
-    """
-
-    match_grammar = Sequence(
-        Ref("NotOperatorGrammar"), Ref("RawEqualsSegment"), allow_gaps=False
-    )
-
-
-class NotEqualToSegment_c(CompositeComparisonOperatorSegment):
-    """The comparison operator extension ^=.
-
-    https://www.docs.teradata.com/r/Teradata-Database-SQL-Functions-Operators-Expressions-and-Predicates/March-2017/Comparison-Operators-and-Functions/Comparison-Operators/Supported-Comparison-Operators
-    """
-
-    match_grammar = Sequence(
-        Ref("BitwiseXorSegment"), Ref("RawEqualsSegment"), allow_gaps=False
     )

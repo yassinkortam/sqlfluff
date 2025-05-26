@@ -1,14 +1,15 @@
 """Tests for templaters."""
 
-import logging
-
 import pytest
-
-from sqlfluff.core import FluffConfig, SQLTemplaterError
+import logging
 from sqlfluff.core.errors import SQLFluffSkipFile
+
 from sqlfluff.core.templaters import PythonTemplater
+from sqlfluff.core import SQLTemplaterError, FluffConfig
+
 from sqlfluff.core.templaters.base import RawFileSlice, TemplatedFileSlice
 from sqlfluff.core.templaters.python import IntermediateFileSlice
+
 
 PYTHON_STRING = "SELECT * FROM {blah}"
 
@@ -191,7 +192,7 @@ def test__templater_python_sorted_occurrence_tuples(test, result):
 def test__templater_python_slice_template(test, result):
     """Test _slice_template."""
     resp = list(PythonTemplater._slice_template(test))
-    # check contiguous
+    # check contigious
     assert "".join(elem.raw for elem in resp) == test
     # check indices
     idx = 0
@@ -312,7 +313,7 @@ def test__templater_python_split_invariants(
                     "invariant",
                     slice(45, 76, None),
                     slice(40, 71, None),
-                    [RawFileSlice("' as convertible from something", "literal", 40)],
+                    [RawFileSlice("' as convertable from something", "literal", 40)],
                 ),
             ],
             {
@@ -320,16 +321,16 @@ def test__templater_python_split_invariants(
                 ", ": [13, 31, 38],
                 " as foo, ": [24],
                 ", '": [38],
-                "' as convertible from something": [45],
+                "' as convertable from something": [45],
             },
             {
                 "SELECT ": [0],
                 ", ": [14, 29, 35],
                 " as foo, ": [22],
                 ", '": [35],
-                "' as convertible from something": [40],
+                "' as convertable from something": [40],
             },
-            "SELECT nothing, 435.24 as foo, spam, '{}' as convertible from something",
+            "SELECT nothing, 435.24 as foo, spam, '{}' as convertable from something",
             [
                 TemplatedFileSlice("literal", slice(0, 7, None), slice(0, 7, None)),
                 TemplatedFileSlice("templated", slice(7, 13, None), slice(7, 14, None)),
@@ -388,7 +389,7 @@ def test__templater_python_split_uniques_coalesce_rest(
                 templated_str,
             )
         )
-    # Check contiguous
+    # Check contigious
     prev_slice = None
     for elem in result:
         if prev_slice:
@@ -410,9 +411,9 @@ def test__templater_python_split_uniques_coalesce_rest(
             [("literal", slice(0, 3, None), slice(0, 3, None))],
         ),
         (
-            "SELECT {blah}, {foo:.2f} as foo, {bar}, '{{}}' as convertible from "
+            "SELECT {blah}, {foo:.2f} as foo, {bar}, '{{}}' as convertable from "
             "something",
-            "SELECT nothing, 435.24 as foo, spam, '{}' as convertible from something",
+            "SELECT nothing, 435.24 as foo, spam, '{}' as convertable from something",
             True,
             [
                 ("literal", slice(0, 7, None), slice(0, 7, None)),
@@ -458,15 +459,13 @@ def test__templater_python_slice_file(raw_file, templated_file, unwrap_wrapped, 
     """Test slice_file."""
     _, resp, _ = PythonTemplater().slice_file(
         raw_file,
-        # For the render_func we just use a function which just returns the
-        # templated file from the test case.
-        (lambda x: templated_file),
+        templated_file,
         config=FluffConfig(
             configs={"templater": {"unwrap_wrapped_queries": unwrap_wrapped}},
             overrides={"dialect": "ansi"},
         ),
     )
-    # Check contiguous
+    # Check contigious
     prev_slice = None
     for templated_slice in resp:
         if prev_slice:
@@ -480,7 +479,7 @@ def test__templater_python_slice_file(raw_file, templated_file, unwrap_wrapped, 
 def test__templater_python_large_file_check():
     """Test large file skipping.
 
-    The check is separately called on each .process() method
+    The check is seperately called on each .process() method
     so it makes sense to test a few templaters.
     """
     # First check we can process the file normally without config.
@@ -496,73 +495,3 @@ def test__templater_python_large_file_check():
         )
 
     assert "Length of file" in str(excinfo.value)
-
-
-@pytest.mark.parametrize(
-    "raw_str,result",
-    [
-        ("", ""),
-        (
-            "SELECT * FROM {foo.bar}",
-            "SELECT * FROM foobar",
-        ),
-        (
-            "SELECT {foo} FROM {foo.bar}",
-            "SELECT bar FROM foobar",
-        ),
-        (
-            "SELECT {num:.2f} FROM blah",
-            "SELECT 123.00 FROM blah",
-        ),
-        (
-            "SELECT {self.number:.1f} FROM blah",
-            "SELECT 42.0 FROM blah",
-        ),
-        (
-            "SELECT * FROM {obj.schema}.{obj.table}",
-            "SELECT * FROM my_schema.my_table",
-        ),
-    ],
-)
-def test__templater_python_dot_notation_variables(raw_str, result):
-    """Test template variables that contain a dot character (`.`)."""
-    context = {
-        "foo": "bar",
-        "num": 123,
-        "sqlfluff": {
-            "foo.bar": "foobar",
-            "self.number": 42,
-            "obj.schema": "my_schema",
-            "obj.table": "my_table",
-        },
-    }
-    t = PythonTemplater(override_context=context)
-    instr = raw_str
-    outstr, _ = t.process(in_str=instr, fname="test")
-    assert str(outstr) == result
-
-
-@pytest.mark.parametrize(
-    "context,error_string",
-    [
-        # No additional context (i.e. no sqlfluff key)
-        (
-            {},
-            "magic key 'sqlfluff' missing from context.  This key is required "
-            "for template variables containing '.'.",
-        ),
-        # No key missing within sqlfluff dict.
-        (
-            {"sqlfluff": {"a": "b"}},
-            "'foo.bar' key missing from 'sqlfluff' dict in context. Template "
-            "variables containing '.' are required to use the 'sqlfluff' magic "
-            "fixed context key.",
-        ),
-    ],
-)
-def test__templater_python_dot_notation_fail(context, error_string):
-    """Test failures with template variables that contain a dot character (`.`)."""
-    t = PythonTemplater(override_context=context)
-    with pytest.raises(SQLTemplaterError) as excinfo:
-        outstr, _ = t.process(in_str="SELECT * FROM {foo.bar}", fname="test")
-    assert error_string in excinfo.value.desc()

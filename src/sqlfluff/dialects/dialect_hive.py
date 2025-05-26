@@ -1,41 +1,36 @@
 """The Hive dialect."""
+from typing import Optional
 
-from sqlfluff.core.dialects import load_raw_dialect
 from sqlfluff.core.parser import (
     AnyNumberOf,
     BaseSegment,
-    Bracketed,
-    CodeSegment,
-    Dedent,
-    Delimited,
-    IdentifierSegment,
-    Indent,
-    KeywordSegment,
-    LiteralSegment,
-    Matchable,
-    Nothing,
-    OneOf,
-    OptionallyBracketed,
-    Ref,
-    RegexParser,
-    SegmentGenerator,
     Sequence,
-    StringParser,
-    SymbolSegment,
+    Ref,
+    OneOf,
+    Bracketed,
+    Delimited,
     TypedParser,
+    Nothing,
+    SymbolSegment,
+    StringParser,
+    OptionallyBracketed,
+    RegexParser,
+    Matchable,
+    StartsWith,
+    Indent,
+    Dedent,
 )
-from sqlfluff.dialects import dialect_ansi as ansi
+
+from sqlfluff.core.dialects import load_raw_dialect
+from sqlfluff.core.parser.segments.raw import CodeSegment, KeywordSegment
 from sqlfluff.dialects.dialect_hive_keywords import (
     RESERVED_KEYWORDS,
     UNRESERVED_KEYWORDS,
 )
+from sqlfluff.dialects import dialect_ansi as ansi
 
 ansi_dialect = load_raw_dialect("ansi")
-hive_dialect = ansi_dialect.copy_as(
-    "hive",
-    formatted_name="Apache Hive",
-    docstring="The dialect for Apache `Hive <https://hive.apache.org/>`_.",
-)
+hive_dialect = ansi_dialect.copy_as("hive")
 
 # Clear ANSI Keywords and add all Hive keywords
 # Commented clearing for now as some are needed for some statements imported
@@ -45,7 +40,7 @@ hive_dialect.sets("unreserved_keywords").update(UNRESERVED_KEYWORDS)
 # hive_dialect.sets("reserved_keywords").clear()
 hive_dialect.sets("reserved_keywords").update(RESERVED_KEYWORDS)
 
-hive_dialect.bracket_sets("angle_bracket_pairs").update(
+hive_dialect.sets("angle_bracket_pairs").update(
     [
         ("angle", "StartAngleBracketSegment", "EndAngleBracketSegment", False),
     ]
@@ -139,9 +134,8 @@ hive_dialect.add(
     ),
     BackQuotedIdentifierSegment=TypedParser(
         "back_quote",
-        IdentifierSegment,
+        ansi.IdentifierSegment,
         type="quoted_identifier",
-        casefold=str.lower,
     ),
 )
 
@@ -149,35 +143,19 @@ hive_dialect.add(
 hive_dialect.replace(
     JoinKeywordsGrammar=Sequence(Sequence("SEMI", optional=True), "JOIN"),
     QuotedLiteralSegment=OneOf(
-        TypedParser(
-            "single_quote", LiteralSegment, type="quoted_literal", casefold=str.lower
-        ),
-        TypedParser(
-            "double_quote", LiteralSegment, type="quoted_literal", casefold=str.lower
-        ),
-        TypedParser(
-            "back_quote", LiteralSegment, type="quoted_literal", casefold=str.lower
-        ),
+        TypedParser("single_quote", ansi.LiteralSegment, type="quoted_literal"),
+        TypedParser("double_quote", ansi.LiteralSegment, type="quoted_literal"),
+        TypedParser("back_quote", ansi.LiteralSegment, type="quoted_literal"),
     ),
+    SimpleArrayTypeGrammar=Ref.keyword("ARRAY"),
     TrimParametersGrammar=Nothing(),
-    # ANSI with lower casefold
-    NakedIdentifierSegment=SegmentGenerator(
-        # Generate the anti template from the set of reserved keywords
-        lambda dialect: RegexParser(
-            r"[A-Z0-9_]*[A-Z][A-Z0-9_]*",
-            IdentifierSegment,
-            type="naked_identifier",
-            anti_template=r"^(" + r"|".join(dialect.sets("reserved_keywords")) + r")$",
-            casefold=str.lower,
-        )
-    ),
     SingleIdentifierGrammar=ansi_dialect.get_grammar("SingleIdentifierGrammar").copy(
         insert=[
             Ref("BackQuotedIdentifierSegment"),
         ]
     ),
-    SelectClauseTerminatorGrammar=ansi_dialect.get_grammar(
-        "SelectClauseTerminatorGrammar"
+    SelectClauseElementTerminatorGrammar=ansi_dialect.get_grammar(
+        "SelectClauseElementTerminatorGrammar"
     ).copy(
         insert=[
             Sequence("CLUSTER", "BY"),
@@ -230,80 +208,7 @@ hive_dialect.replace(
         "QUALIFY",
         "WINDOW",
     ),
-    # Full Apache Hive `CREATE ALTER` reference here:
-    # https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-AlterTable
-    AlterTableOptionsGrammar=ansi_dialect.get_grammar("AlterTableOptionsGrammar").copy(
-        insert=[
-            # Exchange
-            Sequence(
-                "EXCHANGE",
-                Ref("PartitionSpecGrammar"),
-                "WITH",
-                "TABLE",
-                Ref("TableReferenceSegment"),
-            ),
-        ]
-    ),
-    LikeGrammar=OneOf(
-        "LIKE", "RLIKE", "ILIKE", "REGEXP", "IREGEXP"
-    ),  # Impala dialect uses REGEXP and IREGEXP
 )
-
-
-class ArrayTypeSegment(ansi.ArrayTypeSegment):
-    """Prefix for array literals specifying the type."""
-
-    type = "array_type"
-    match_grammar = Sequence(
-        "ARRAY",
-        Bracketed(
-            Ref("DatatypeSegment"),
-            bracket_type="angle",
-            bracket_pairs_set="angle_bracket_pairs",
-            optional=True,
-        ),
-    )
-
-
-class EqualsSegment(ansi.EqualsSegment):
-    """Equals operator.
-
-    Hive allows double equals:
-    https://cwiki.apache.org/confluence/display/Hive/Hive+Operators
-    """
-
-    match_grammar: Matchable = Sequence(
-        Ref("RawEqualsSegment"),
-        Ref("RawEqualsSegment", optional=True),
-    )
-
-
-class StructTypeSegment(ansi.StructTypeSegment):
-    """Expression to construct a STRUCT datatype."""
-
-    match_grammar = Sequence(
-        "STRUCT",
-        Ref("StructTypeSchemaSegment", optional=True),
-    )
-
-
-class StructTypeSchemaSegment(BaseSegment):
-    """Expression to construct the schema of a STRUCT datatype."""
-
-    type = "struct_type_schema"
-    match_grammar = Bracketed(
-        Delimited(
-            Sequence(
-                Ref("SingleIdentifierGrammar"),
-                Ref("ColonSegment"),
-                Ref("DatatypeSegment"),
-                Ref("CommentGrammar", optional=True),
-            ),
-            bracket_pairs_set="angle_bracket_pairs",
-        ),
-        bracket_pairs_set="angle_bracket_pairs",
-        bracket_type="angle",
-    )
 
 
 class CreateDatabaseStatementSegment(BaseSegment):
@@ -419,101 +324,6 @@ class CreateTableStatementSegment(BaseSegment):
     )
 
 
-class TableConstraintSegment(ansi.TableConstraintSegment):
-    """A table constraint, e.g. for CREATE TABLE."""
-
-    type = "table_constraint"
-
-    match_grammar: Matchable = Sequence(
-        Sequence("CONSTRAINT", Ref("ObjectReferenceSegment"), optional=True),
-        OneOf(
-            Sequence(
-                "UNIQUE",
-                Ref("BracketedColumnReferenceListGrammar"),
-            ),
-            Sequence(
-                Ref("PrimaryKeyGrammar"),
-                Ref("BracketedColumnReferenceListGrammar"),
-                Sequence(
-                    "DISABLE",
-                    "NOVALIDATE",
-                    OneOf("RELY", "NORELY", optional=True),
-                    optional=True,
-                ),
-            ),
-            Sequence(
-                Ref("ForeignKeyGrammar"),
-                Ref("BracketedColumnReferenceListGrammar"),
-                Ref(
-                    "ReferenceDefinitionGrammar"
-                ),  # REFERENCES reftable [ ( refcolumn) ]
-                Sequence("DISABLE", "NOVALIDATE", optional=True),
-            ),
-        ),
-    )
-
-
-class FromExpressionElementSegment(ansi.FromExpressionElementSegment):
-    """Modified from ANSI to allow for `LATERAL VIEW` clause."""
-
-    match_grammar = (
-        ansi.FromExpressionElementSegment._base_from_expression_element.copy(
-            insert=[
-                AnyNumberOf(Ref("LateralViewClauseSegment")),
-            ],
-            before=Ref("PostTableExpressionGrammar", optional=True),
-        )
-    )
-
-
-class AliasExpressionSegment(ansi.AliasExpressionSegment):
-    """Modified to allow UDTF in SELECT clause to return multiple columns aliases.
-
-    Full Apache Hive `Built-in Table-Generating Functions (UDTF)` reference here:
-    https://cwiki.apache.org/confluence/display/hive/languagemanual+udf#LanguageManualUDF-Built-inTable-GeneratingFunctions(UDTF)
-    """
-
-    match_grammar = Sequence(
-        Ref.keyword("AS", optional=True),
-        OneOf(
-            Sequence(
-                Ref("SingleIdentifierGrammar", optional=True),
-                Bracketed(Ref("SingleIdentifierListSegment")),
-            ),
-            Ref("SingleIdentifierGrammar"),
-        ),
-    )
-
-
-class LateralViewClauseSegment(BaseSegment):
-    """A `LATERAL VIEW` in a `FROM` clause.
-
-    https://cwiki.apache.org/confluence/display/hive/languagemanual+lateralview
-    """
-
-    type = "lateral_view_clause"
-
-    match_grammar = Sequence(
-        Indent,
-        "LATERAL",
-        "VIEW",
-        Ref.keyword("OUTER", optional=True),
-        Ref("FunctionSegment"),
-        # NB: AliasExpressionSegment is not used here for table
-        # or column alias because `AS` is optional within it
-        # (and in most scenarios). Here it's explicitly defined
-        # for when it is required and not allowed.
-        Ref("SingleIdentifierGrammar", optional=True),
-        Sequence(
-            "AS",
-            Delimited(
-                Ref("SingleIdentifierGrammar"),
-            ),
-        ),
-        Dedent,
-    )
-
-
 class PrimitiveTypeSegment(BaseSegment):
     """Primitive data types."""
 
@@ -532,7 +342,12 @@ class PrimitiveTypeSegment(BaseSegment):
         "TIMESTAMP",
         Sequence(
             OneOf("DECIMAL", "DEC", "NUMERIC"),
-            Ref("BracketedArguments", optional=True),
+            Bracketed(
+                Ref("NumericLiteralSegment"),
+                Ref("CommaSegment"),
+                Ref("NumericLiteralSegment"),
+                optional=True,
+            ),
         ),
         "DATE",
         "VARCHAR",
@@ -547,8 +362,14 @@ class DatatypeSegment(BaseSegment):
     type = "data_type"
     match_grammar = OneOf(
         Ref("PrimitiveTypeSegment"),
-        Ref("ArrayTypeSegment"),
-        Ref("SizedArrayTypeSegment"),
+        Sequence(
+            "ARRAY",
+            Bracketed(
+                Ref("DatatypeSegment"),
+                bracket_pairs_set="angle_bracket_pairs",
+                bracket_type="angle",
+            ),
+        ),
         Sequence(
             "MAP",
             Bracketed(
@@ -561,7 +382,22 @@ class DatatypeSegment(BaseSegment):
                 bracket_type="angle",
             ),
         ),
-        Ref("StructTypeSegment"),
+        Sequence(
+            "STRUCT",
+            Bracketed(
+                Delimited(
+                    Sequence(
+                        Ref("NakedIdentifierSegment"),
+                        Ref("ColonSegment"),
+                        Ref("DatatypeSegment"),
+                        Ref("CommentGrammar", optional=True),
+                    ),
+                    bracket_pairs_set="angle_bracket_pairs",
+                ),
+                bracket_pairs_set="angle_bracket_pairs",
+                bracket_type="angle",
+            ),
+        ),
         Sequence(
             "UNIONTYPE",
             Bracketed(
@@ -571,6 +407,17 @@ class DatatypeSegment(BaseSegment):
                 bracket_pairs_set="angle_bracket_pairs",
                 bracket_type="angle",
             ),
+        ),
+        # array types
+        OneOf(
+            AnyNumberOf(
+                Bracketed(
+                    Ref("ExpressionSegment", optional=True), bracket_type="square"
+                )
+            ),
+            Ref("SimpleArrayTypeGrammar"),
+            Sequence(Ref("SimpleArrayTypeGrammar"), Ref("ArrayLiteralSegment")),
+            optional=True,
         ),
     )
 
@@ -679,47 +526,14 @@ class TruncateStatementSegment(BaseSegment):
     )
 
 
-class SetStatementSegment(BaseSegment):
-    """A `SET` statement.
-
-    https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Commands
-    """
-
-    type = "set_statement"
-
-    match_grammar = Sequence(
-        "SET",
-        OneOf(
-            # set -v
-            Sequence(
-                StringParser("-", SymbolSegment, type="option_indicator"),
-                StringParser("v", CodeSegment, type="option"),
-            ),
-            # set key = value
-            Sequence(
-                Delimited(
-                    Ref("ParameterNameSegment"),
-                    delimiter=OneOf(Ref("DotSegment"), Ref("ColonDelimiterSegment")),
-                    allow_gaps=False,
-                ),
-                Ref("RawEqualsSegment"),
-                Ref("LiteralGrammar"),
-            ),
-            optional=True,
-        ),
-    )
-
-
 class StatementSegment(ansi.StatementSegment):
     """Overriding StatementSegment to allow for additional segment parsing."""
 
-    match_grammar = ansi.StatementSegment.match_grammar.copy(
+    parse_grammar = ansi.StatementSegment.parse_grammar.copy(
         insert=[
             Ref("AlterDatabaseStatementSegment"),
             Ref("MsckRepairTableStatementSegment"),
             Ref("MsckTableStatementSegment"),
-            Ref("SetStatementSegment"),
-            Ref("AlterViewStatementSegment"),
         ],
         remove=[
             Ref("TransactionStatementSegment"),
@@ -729,6 +543,7 @@ class StatementSegment(ansi.StatementSegment):
             Ref("DropModelStatementSegment"),
         ],
     )
+    match_grammar = ansi.StatementSegment.match_grammar
 
 
 class InsertStatementSegment(BaseSegment):
@@ -764,7 +579,7 @@ class InsertStatementSegment(BaseSegment):
             ),
             Sequence(
                 "INTO",
-                Ref.keyword("TABLE", optional=True),
+                "TABLE",
                 Ref("TableReferenceSegment"),
                 Ref("PartitionSpecGrammar", optional=True),
                 OneOf(
@@ -864,22 +679,6 @@ class MsckTableStatementSegment(BaseSegment):
     )
 
 
-class RowFunctionContentsSegment(BaseSegment):
-    """Row Function Contents."""
-
-    type = "function_contents"
-
-    match_grammar = Sequence(
-        Bracketed(
-            Delimited(
-                Sequence(
-                    Ref("BaseExpressionElementGrammar"),
-                ),
-            ),
-        ),
-    )
-
-
 class FunctionSegment(BaseSegment):
     """A scalar or aggregate function.
 
@@ -898,14 +697,30 @@ class FunctionSegment(BaseSegment):
             # rather than identifiers.
             Sequence(
                 Ref("DatePartFunctionNameSegment"),
-                Ref("DateTimeFunctionContentsSegment"),
+                Bracketed(
+                    Delimited(
+                        Ref("DatetimeUnitSegment"),
+                        Ref(
+                            "FunctionContentsGrammar",
+                            # The brackets might be empty for some functions...
+                            optional=True,
+                            ephemeral_name="FunctionContentsGrammar",
+                        ),
+                    )
+                ),
             ),
         ),
         Sequence(
             # This unusual syntax is used to cast the Keyword ROW to
             # to the function_name to avoid rule linting exceptions
             StringParser("ROW", KeywordSegment, type="function_name"),
-            Ref("RowFunctionContentsSegment"),
+            Bracketed(
+                Delimited(
+                    Sequence(
+                        Ref("BaseExpressionElementGrammar"),
+                    ),
+                ),
+            ),
             "AS",
             "ROW",
             Bracketed(
@@ -926,7 +741,14 @@ class FunctionSegment(BaseSegment):
                         Ref("ValuesClauseSegment"),
                     ),
                 ),
-                Ref("FunctionContentsSegment"),
+                Bracketed(
+                    Ref(
+                        "FunctionContentsGrammar",
+                        # The brackets might be empty for some functions...
+                        optional=True,
+                        ephemeral_name="FunctionContentsGrammar",
+                    )
+                ),
             ),
             Ref("PostFunctionGrammar", optional=True),
         ),
@@ -977,19 +799,24 @@ class SamplingExpressionSegment(BaseSegment):
 class UnorderedSelectStatementSegment(ansi.UnorderedSelectStatementSegment):
     """Enhance unordered SELECT statement to include CLUSTER, DISTRIBUTE, SORT BY."""
 
-    match_grammar = ansi.UnorderedSelectStatementSegment.match_grammar.copy(
-        terminators=[
+    match_grammar = ansi.UnorderedSelectStatementSegment.match_grammar.copy()
+    match_grammar.terminator = match_grammar.terminator.copy(  # type: ignore
+        insert=[
             Ref("ClusterByClauseSegment"),
             Ref("DistributeByClauseSegment"),
             Ref("SortByClauseSegment"),
         ],
+        before=Ref("LimitClauseSegment"),
     )
+
+    parse_grammar = ansi.UnorderedSelectStatementSegment.parse_grammar.copy()
 
 
 class SelectStatementSegment(ansi.SelectStatementSegment):
     """Overriding SelectStatementSegment to allow for additional segment parsing."""
 
-    match_grammar = ansi.SelectStatementSegment.match_grammar.copy(
+    match_grammar = ansi.SelectStatementSegment.match_grammar.copy()
+    parse_grammar = ansi.SelectStatementSegment.parse_grammar.copy(
         insert=[
             Ref("ClusterByClauseSegment", optional=True),
             Ref("DistributeByClauseSegment", optional=True),
@@ -1002,14 +829,16 @@ class SelectStatementSegment(ansi.SelectStatementSegment):
 class SelectClauseSegment(ansi.SelectClauseSegment):
     """Overriding SelectClauseSegment to allow for additional segment parsing."""
 
-    match_grammar = ansi.SelectClauseSegment.match_grammar.copy(
-        # Add additional terminators
-        terminators=[
+    match_grammar = ansi.SelectClauseSegment.match_grammar.copy()
+    match_grammar.terminator = match_grammar.terminator.copy(  # type: ignore
+        insert=[
             Sequence("CLUSTER", "BY"),
             Sequence("DISTRIBUTE", "BY"),
             Sequence("SORT", "BY"),
         ],
+        before=Ref.keyword("LIMIT"),
     )
+    parse_grammar = ansi.SelectClauseSegment.parse_grammar.copy()
 
 
 class SetExpressionSegment(ansi.SetExpressionSegment):
@@ -1025,11 +854,49 @@ class SetExpressionSegment(ansi.SetExpressionSegment):
     )
 
 
+class PartitionClauseSegment(ansi.PartitionClauseSegment):
+    """Overriding SetExpressionSegment to allow for additional segment parsing."""
+
+    match_grammar = ansi.PartitionClauseSegment.match_grammar.copy()
+    match_grammar.terminator = match_grammar.terminator.copy(  # type: ignore
+        insert=[
+            Sequence("CLUSTER", "BY"),
+            Sequence("DISTRIBUTE", "BY"),
+            Sequence("SORT", "BY"),
+        ],
+        before=Ref("FrameClauseUnitGrammar"),
+    )
+    parse_grammar = ansi.PartitionClauseSegment.parse_grammar
+
+
+class OrderByClauseSegment(ansi.OrderByClauseSegment):
+    """A `ORDER BY` clause like in `SELECT`."""
+
+    match_grammar = ansi.OrderByClauseSegment.match_grammar.copy()
+    match_grammar.terminator = OneOf(  # type: ignore
+        "CLUSTER",
+        "DISTRIBUTE",
+        "SORT",
+        "LIMIT",
+        "HAVING",
+        "QUALIFY",
+        # For window functions
+        "WINDOW",
+        Ref("FrameClauseUnitGrammar"),
+        "SEPARATOR",
+    )
+    parse_grammar = ansi.OrderByClauseSegment.parse_grammar
+
+
 class ClusterByClauseSegment(ansi.OrderByClauseSegment):
     """A `CLUSTER BY` clause like in `SELECT`."""
 
     type = "clusterby_clause"
-    match_grammar: Matchable = Sequence(
+    match_grammar: Matchable = StartsWith(
+        Sequence("CLUSTER", "BY"),
+        terminator=ansi.OrderByClauseSegment.match_grammar.terminator,  # type: ignore
+    )
+    parse_grammar: Optional[Matchable] = Sequence(
         "CLUSTER",
         "BY",
         Indent,
@@ -1041,7 +908,7 @@ class ClusterByClauseSegment(ansi.OrderByClauseSegment):
                     Ref("ExpressionSegment"),
                 ),
             ),
-            terminators=["LIMIT", Ref("FrameClauseUnitGrammar")],
+            terminator=OneOf(Ref.keyword("LIMIT"), Ref("FrameClauseUnitGrammar")),
         ),
         Dedent,
     )
@@ -1051,7 +918,20 @@ class DistributeByClauseSegment(ansi.OrderByClauseSegment):
     """A `DISTRIBUTE BY` clause like in `SELECT`."""
 
     type = "distributeby_clause"
-    match_grammar: Matchable = Sequence(
+    match_grammar: Matchable = StartsWith(
+        Sequence("DISTRIBUTE", "BY"),
+        terminator=OneOf(
+            "SORT",
+            "LIMIT",
+            "HAVING",
+            "QUALIFY",
+            # For window functions
+            "WINDOW",
+            Ref("FrameClauseUnitGrammar"),
+            "SEPARATOR",
+        ),
+    )
+    parse_grammar: Optional[Matchable] = Sequence(
         "DISTRIBUTE",
         "BY",
         Indent,
@@ -1063,16 +943,9 @@ class DistributeByClauseSegment(ansi.OrderByClauseSegment):
                     Ref("ExpressionSegment"),
                 ),
             ),
-            terminators=[
-                "SORT",
-                "LIMIT",
-                "HAVING",
-                "QUALIFY",
-                # For window functions
-                "WINDOW",
-                Ref("FrameClauseUnitGrammar"),
-                "SEPARATOR",
-            ],
+            terminator=OneOf(
+                Ref.keyword("LIMIT"), Ref("FrameClauseUnitGrammar"), Ref.keyword("SORT")
+            ),
         ),
         Dedent,
     )
@@ -1082,7 +955,11 @@ class SortByClauseSegment(ansi.OrderByClauseSegment):
     """A `SORT BY` clause like in `SELECT`."""
 
     type = "sortby_clause"
-    match_grammar: Matchable = Sequence(
+    match_grammar: Matchable = StartsWith(
+        Sequence("SORT", "BY"),
+        terminator=ansi.OrderByClauseSegment.match_grammar.terminator,  # type: ignore
+    )
+    parse_grammar: Optional[Matchable] = Sequence(
         "SORT",
         "BY",
         Indent,
@@ -1096,29 +973,7 @@ class SortByClauseSegment(ansi.OrderByClauseSegment):
                 OneOf("ASC", "DESC", optional=True),
                 Sequence("NULLS", OneOf("FIRST", "LAST"), optional=True),
             ),
-            terminators=["LIMIT", Ref("FrameClauseUnitGrammar")],
+            terminator=OneOf(Ref.keyword("LIMIT"), Ref("FrameClauseUnitGrammar")),
         ),
         Dedent,
-    )
-
-
-class AlterViewStatementSegment(BaseSegment):
-    """A `ALTER VIEW` statement to change the view schema or properties.
-
-    https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-Create/Drop/AlterView
-    """
-
-    type = "alter_view_statement"
-
-    match_grammar = Sequence(
-        "ALTER",
-        "VIEW",
-        Ref("TableReferenceSegment"),
-        OneOf(
-            Sequence("SET", Ref("TablePropertiesGrammar")),
-            Sequence(
-                "AS",
-                OptionallyBracketed(Ref("SelectStatementSegment")),
-            ),
-        ),
     )

@@ -1,5 +1,4 @@
 """Test autocomplete commands."""
-
 import pytest
 
 from sqlfluff.cli.autocomplete import dialect_shell_complete
@@ -9,9 +8,8 @@ from sqlfluff.cli.autocomplete import dialect_shell_complete
     "incomplete,expected",
     [
         ["an", ["ansi"]],
-        ["d", ["databricks", "db2", "duckdb"]],
-        ["g", ["greenplum"]],
-        ["s", ["snowflake", "soql", "sparksql", "sqlite", "starrocks"]],
+        ["d", ["databricks", "db2"]],
+        ["s", ["snowflake", "soql", "sparksql", "sqlite"]],
         ["post", ["postgres"]],
     ],
 )

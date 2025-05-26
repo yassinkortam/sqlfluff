@@ -1,5 +1,4 @@
 SELECT
-    {{ "      c2\n" }} AS other_id,
     {{ states }}
     {% for action in actions %}
         , {{metric}}_{{action}}

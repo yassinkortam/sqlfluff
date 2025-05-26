@@ -1,4 +1,4 @@
 test-config:
   rules:
-    - LT01
-    - CP03
+    - L008
+    - L030

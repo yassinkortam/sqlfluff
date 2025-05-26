@@ -3,7 +3,7 @@
 # computed by SQLFluff when running the tests. Please run
 # `python test/generate_parse_fixture_yml.py`  to generate them after adding or
 # altering SQL files.
-_hash: 8644f64d875c1808df0e0795774001f4817490e86eb0f00974ca775f88ded213
+_hash: f61ec5dd4a6ba9978e233cba06f0b7d6a9d3483827a18fe8f7b594c545c6224d
 file:
 - batch:
     statement:
@@ -58,7 +58,7 @@ file:
           - column_reference:
               naked_identifier: EndDate
           - keyword: IS
-          - null_literal: 'NULL'
+          - keyword: 'NULL'
         statement_terminator: ;
   - statement:
       print_statement:
@@ -69,21 +69,19 @@ file:
           function:
             function_name:
               keyword: CAST
-            function_contents:
-              bracketed:
-                start_bracket: (
-                expression:
-                  system_variable: '@@ROWCOUNT'
-                keyword: as
-                data_type:
-                  data_type_identifier: char
-                  bracketed_arguments:
-                    bracketed:
-                      start_bracket: (
-                      expression:
-                        numeric_literal: '3'
-                      end_bracket: )
-                end_bracket: )
+            bracketed:
+              start_bracket: (
+              expression:
+                system_variable: '@@ROWCOUNT'
+              keyword: as
+              data_type:
+                data_type_identifier: char
+                bracketed:
+                  start_bracket: (
+                  expression:
+                    numeric_literal: '3'
+                  end_bracket: )
+              end_bracket: )
         statement_terminator: ;
 - go_statement:
     keyword: GO
@@ -132,13 +130,12 @@ file:
                         function:
                           function_name:
                             function_name_identifier: MAX
-                          function_contents:
-                            bracketed:
-                              start_bracket: (
-                              expression:
-                                column_reference:
-                                  naked_identifier: RateChangeDate
-                              end_bracket: )
+                          bracketed:
+                            start_bracket: (
+                            expression:
+                              column_reference:
+                                naked_identifier: RateChangeDate
+                            end_bracket: )
                     from_clause:
                       keyword: FROM
                       from_expression:
@@ -555,12 +552,11 @@ file:
             naked_identifier: ProductName
             data_type:
               data_type_identifier: nvarchar
-              bracketed_arguments:
-                bracketed:
-                  start_bracket: (
-                  expression:
-                    numeric_literal: '50'
-                  end_bracket: )
+              bracketed:
+                start_bracket: (
+                expression:
+                  numeric_literal: '50'
+                end_bracket: )
             column_constraint_segment:
             - keyword: NOT
             - keyword: 'NULL'

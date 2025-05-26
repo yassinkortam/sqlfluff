@@ -11,6 +11,3 @@ FROM #n t
 GROUP BY    t.ActionDTS;
 
 DROP  TABLE #n;
-
-SELECT st, count(*), count(DISTINCT id) FROM #3
-GROUP BY st WITH ROLLUP;
