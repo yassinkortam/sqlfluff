@@ -6,6 +6,7 @@ import sys
 import json
 import logging
 import time
+import re
 from logging import LogRecord
 from typing import Callable, Tuple, Optional, cast
 
@@ -146,9 +147,15 @@ class PathAndUserErrorHandler:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is OSError:
+            message = str(exc_val)
+            missing_match = re.search(
+                r"Specified path does not exist: (?P<path>.*)", message
+            )
+            missing_path = missing_match.group("path") if missing_match else None
+            display_paths = missing_path or self.paths
             click.echo(
                 self.formatter.colorize(
-                    f"The path(s) { self.paths } could not be "
+                    f"The path(s) {display_paths} could not be "
                     "accessed. Check it/they exist(s).",
                     Color.red,
                 )
