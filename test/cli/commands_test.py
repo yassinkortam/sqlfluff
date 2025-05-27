@@ -1206,6 +1206,19 @@ def test__cli__command_fail_nice_not_found(command):
     assert "could not be accessed" in result.output
 
 
+def test__cli__command_fail_nice_not_found_subset(tmp_path):
+    """Check message only shows missing paths when multiple provided."""
+    existing = tmp_path / "ok.sql"
+    existing.write_text("select 1")
+    missing = tmp_path / "missing.sql"
+    result = invoke_assert_code(
+        args=[lint, (str(existing), str(missing))],
+        ret_code=2,
+    )
+    assert f"{missing}" in result.output
+    assert str(existing) not in result.output
+
+
 @patch("click.utils.should_strip_ansi")
 @patch("sys.stdout.isatty")
 def test__cli__command_lint_nocolor(isatty, should_strip_ansi, capsys, tmpdir):

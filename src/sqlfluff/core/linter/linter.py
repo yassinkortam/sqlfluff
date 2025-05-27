@@ -969,7 +969,7 @@ class Linter:
             if ignore_non_existent_files:
                 return []
             else:
-                raise OSError("Specified path does not exist")
+                raise OSError(f"Specified path does not exist: {path}")
 
         # Files referred to exactly are also ignored if
         # matched, but we warn the users when that happens
