@@ -29,6 +29,7 @@ from sqlfluff.cli.commands import (
     rules,
     fix,
     parse,
+    compile,
     dialects,
     get_config,
 )
@@ -1210,6 +1211,15 @@ def test__cli__command_lint_nocolor(isatty, should_strip_ansi, capsys, tmpdir):
     with open(output_file, "r") as f:
         file_contents = f.read()
     assert not contains_ansi_escape(file_contents)
+
+
+def test__cli__command_compile_from_stdin():
+    """Compile SQL passed on stdin and return the rendered SQL."""
+    result = invoke_assert_code(
+        args=[compile, ("-", "--dialect=ansi")],
+        cli_input="select 1",
+    )
+    assert result.output.strip() == "select 1"
 
 
 @pytest.mark.parametrize(

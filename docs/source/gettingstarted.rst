@@ -266,6 +266,9 @@ From here, there are several more things to explore.
   explore the :code:`parse` command. You can learn more about
   that command and more by running :code:`sqlfluff --help` or
   :code:`sqlfluff parse --help`.
+* To see the SQL after templating has been applied, try the
+  :code:`compile` command. Check :code:`sqlfluff compile --help`
+  for available options.
 * To start linting more than just one file at a time, experiment
   with passing SQLFluff directories rather than just single files.
   Try running :code:`sqlfluff lint .` (to lint every sql file in the
