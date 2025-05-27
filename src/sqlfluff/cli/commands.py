@@ -937,6 +937,73 @@ def quoted_presenter(dumper, data):
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="")
 
 
+@cli.command(name="compile")
+@common_options
+@core_options
+@click.argument("path", nargs=1, type=click.Path(allow_dash=True))
+@click.option(
+    "--write-output",
+    help=(
+        "Optionally provide a filename to write the results to. "
+        "NB: Setting an output file re-enables normal stdout logging."
+    ),
+)
+@click.option(
+    "--nofail",
+    is_flag=True,
+    help=(
+        "If set, the exit code will always be zero, regardless of templating "
+        "errors found. This is potentially useful during rollout."
+    ),
+)
+def compile(path: str, write_output: Optional[str], nofail: bool, **kwargs) -> None:
+    """Render SQL files and print the compiled SQL."""
+    c = get_config(
+        kwargs.pop("extra_config_path", None),
+        kwargs.pop("ignore_local_config", False),
+        require_dialect=False,
+        **kwargs,
+    )
+    output_stream = make_output_stream(c, None, write_output)
+    lnt, formatter = get_linter_and_formatter(c, output_stream)
+    verbose = c.get("verbose")
+
+    progress_bar_configuration.disable_progress_bar = True
+    formatter.dispatch_config(lnt)
+
+    set_logging_level(
+        verbosity=verbose,
+        formatter=formatter,
+        logger=kwargs.get("logger"),
+        stderr_output=False,
+    )
+
+    rendered_files = []
+    with PathAndUserErrorHandler(formatter, path):
+        if path == "-":
+            rendered_files.append(
+                lnt.render_string(sys.stdin.read(), "stdin", c, "utf-8")
+            )
+        else:
+            for fname in lnt.paths_from_path(path):
+                rendered_files.append(lnt.render_file(fname, c))
+
+    violations_count = 0
+    for rendered in rendered_files:
+        if rendered.templated_file:
+            formatter.dispatch_compilation_header(lnt.templater.name, rendered.fname)
+            output_stream.write(rendered.templated_file.templated_str)
+        for v in rendered.templater_violations:
+            output_stream.write(formatter.format_violation(v))
+        violations_count += len(rendered.templater_violations)
+
+    output_stream.close()
+    if violations_count > 0 and not nofail:
+        sys.exit(EXIT_FAIL)
+    else:
+        sys.exit(EXIT_SUCCESS)
+
+
 @cli.command()
 @common_options
 @core_options
