@@ -508,7 +508,8 @@ def dump_file_payload(filename: Optional[str], payload: str):
     ),
 )
 @click.option(
-    "--disable_progress_bar",
+    "--disable-progress-bar",
+    "disable_progress_bar",
     is_flag=True,
     help="Disables progress bars.",
 )
@@ -704,7 +705,8 @@ def do_fixes(lnt, result, formatter=None, **kwargs):
     ),
 )
 @click.option(
-    "--disable_progress_bar",
+    "--disable-progress-bar",
+    "disable_progress_bar",
     is_flag=True,
     help="Disables progress bars.",
 )
